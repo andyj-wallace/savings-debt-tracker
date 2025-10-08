@@ -1,6 +1,14 @@
 import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import {
+  STORAGE_KEYS,
+  DEFAULTS,
+  MODES,
+  INTEREST,
+  LABELS,
+  CSS_CLASSES
+} from '../constants';
+import {
   calculatePendingInterest,
   shouldApplyInterest
 } from '../utils/interestCalculator';
@@ -15,11 +23,11 @@ import Chart from './Chart';
 import PendingInterestBanner from './PendingInterestBanner';
 
 export default function DebtSavingsThermometer() {
-  const [mode, setMode] = useLocalStorage('trackerMode', 'savings');
-  const [goal, setGoal] = useLocalStorage('trackerGoal', 10000);
-  const [transactionsRaw, setTransactions] = useLocalStorage('trackerTransactions', []);
-  const [interestRate, setInterestRate] = useLocalStorage('trackerInterestRate', 18.99);
-  const [lastInterestDate, setLastInterestDate] = useLocalStorage('trackerLastInterestDate', null);
+  const [mode, setMode] = useLocalStorage(STORAGE_KEYS.MODE, DEFAULTS.MODE);
+  const [goal, setGoal] = useLocalStorage(STORAGE_KEYS.GOAL, DEFAULTS.GOAL);
+  const [transactionsRaw, setTransactions] = useLocalStorage(STORAGE_KEYS.TRANSACTIONS, []);
+  const [interestRate, setInterestRate] = useLocalStorage(STORAGE_KEYS.INTEREST_RATE, DEFAULTS.INTEREST_RATE);
+  const [lastInterestDate, setLastInterestDate] = useLocalStorage(STORAGE_KEYS.LAST_INTEREST_DATE, null);
   
   const [pendingInterest, setPendingInterest] = useState(0);
   const [daysPending, setDaysPending] = useState(0);
@@ -34,7 +42,7 @@ export default function DebtSavingsThermometer() {
   let percentage;
   let remaining;
   
-  if (mode === 'savings') {
+  if (mode === MODES.SAVINGS) {
     // For savings: percentage of goal reached
     percentage = Math.min((current / goal) * 100, 100);
     remaining = goal - current;
@@ -49,7 +57,7 @@ export default function DebtSavingsThermometer() {
 
   // Calculate and display pending interest
   useEffect(() => {
-    if (mode === 'debt' && remaining > 0) {
+    if (mode === MODES.DEBT && remaining > 0) {
       const lastDate = lastInterestDate || (transactions.length > 0 ? transactions[transactions.length - 1].date : new Date().toISOString());
       const { pendingInterest: pending, daysPending: days } = calculatePendingInterest(
         remaining, // Use remaining debt, not current
@@ -65,7 +73,7 @@ export default function DebtSavingsThermometer() {
   }, [current, interestRate, lastInterestDate, mode, transactions, remaining]);
 
   const applyInterestCharge = useCallback(() => {
-    if (mode !== 'debt' || remaining <= 0) return;
+    if (mode !== MODES.DEBT || remaining <= 0) return;
 
     const lastDate = lastInterestDate || (transactions.length > 0 ? transactions[transactions.length - 1].date : new Date().toISOString());
     const { pendingInterest: interest, daysPending: days } = calculatePendingInterest(
@@ -79,7 +87,7 @@ export default function DebtSavingsThermometer() {
         id: Date.now(),
         amount: interest,
         date: new Date().toISOString(),
-        note: 'Monthly interest charge',
+        note: LABELS.COMMON.MONTHLY_INTEREST_CHARGE,
         type: 'interest',
         days: days,
         runningTotal: current + interest,
@@ -94,10 +102,10 @@ export default function DebtSavingsThermometer() {
 
   // Auto-apply interest on app load if 30+ days have passed
   useEffect(() => {
-    if (mode === 'debt' && remaining > 0) {
+    if (mode === MODES.DEBT && remaining > 0) {
       const lastDate = lastInterestDate || (transactions.length > 0 ? transactions[transactions.length - 1].date : null);
 
-      if (shouldApplyInterest(lastDate, 30)) {
+      if (shouldApplyInterest(lastDate, INTEREST.AUTO_APPLY_THRESHOLD_DAYS)) {
         applyInterestCharge();
       }
     }
@@ -106,7 +114,7 @@ export default function DebtSavingsThermometer() {
   const handleModeChange = (newMode) => {
     setMode(newMode);
     setTransactions([]);
-    setGoal(10000);
+    setGoal(DEFAULTS.GOAL);
     setLastInterestDate(null);
   };
 
@@ -114,12 +122,12 @@ export default function DebtSavingsThermometer() {
     let newTransactions = [...transactions];
     
     // For debt mode, add any pending interest first
-    if (mode === 'debt' && remaining > 0 && pendingInterest > 0) {
+    if (mode === MODES.DEBT && remaining > 0 && pendingInterest > 0) {
       const interestTransaction = {
         id: Date.now(),
         amount: pendingInterest,
         date: new Date().toISOString(),
-        note: 'Interest charge',
+        note: LABELS.COMMON.INTEREST_CHARGE,
         type: 'interest',
         days: daysPending,
         runningTotal: current + pendingInterest,
@@ -130,12 +138,12 @@ export default function DebtSavingsThermometer() {
     
     // Add the payment/deposit transaction
     const newRunningTotal = newTransactions.length > 0 
-      ? newTransactions[newTransactions.length - 1].runningTotal + (mode === 'debt' ? -amount : amount)
-      : current + (mode === 'debt' ? -amount : amount);
+      ? newTransactions[newTransactions.length - 1].runningTotal + (mode === MODES.DEBT ? -amount : amount)
+      : current + (mode === MODES.DEBT ? -amount : amount);
     
     const paymentTransaction = {
       id: Date.now() + 1,
-      amount: mode === 'debt' ? -amount : amount,
+      amount: mode === MODES.DEBT ? -amount : amount,
       date: new Date().toISOString(),
       note: note,
       type: 'transaction',
@@ -146,14 +154,14 @@ export default function DebtSavingsThermometer() {
     setTransactions(newTransactions);
     
     // Reset pending interest after adding transaction
-    if (mode === 'debt') {
+    if (mode === MODES.DEBT) {
       setPendingInterest(0);
       setDaysPending(0);
     }
   };
 
   const handleDeleteTransaction = (id) => {
-    if (window.confirm('Are you sure you want to delete this transaction?')) {
+    if (window.confirm(LABELS.COMMON.DELETE_CONFIRMATION)) {
       const updatedTransactions = transactions.filter((t) => t.id !== id);
       
       // Recalculate running totals
@@ -173,16 +181,16 @@ export default function DebtSavingsThermometer() {
   };
 
   const handleReset = () => {
-    if (window.confirm('Are you sure you want to reset all data?')) {
-      localStorage.removeItem('trackerMode');
-      localStorage.removeItem('trackerGoal');
-      localStorage.removeItem('trackerTransactions');
-      localStorage.removeItem('trackerInterestRate');
-      localStorage.removeItem('trackerLastInterestDate');
-      setMode('savings');
-      setGoal(10000);
+    if (window.confirm(LABELS.COMMON.RESET_CONFIRMATION)) {
+      localStorage.removeItem(STORAGE_KEYS.MODE);
+      localStorage.removeItem(STORAGE_KEYS.GOAL);
+      localStorage.removeItem(STORAGE_KEYS.TRANSACTIONS);
+      localStorage.removeItem(STORAGE_KEYS.INTEREST_RATE);
+      localStorage.removeItem(STORAGE_KEYS.LAST_INTEREST_DATE);
+      setMode(DEFAULTS.MODE);
+      setGoal(DEFAULTS.GOAL);
       setTransactions([]);
-      setInterestRate(18.99);
+      setInterestRate(DEFAULTS.INTEREST_RATE);
       setLastInterestDate(null);
       setPendingInterest(0);
       setDaysPending(0);
@@ -190,13 +198,13 @@ export default function DebtSavingsThermometer() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-8">
-      <div className="max-w-2xl mx-auto">
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-slate-800 mb-2">
-            Financial Progress Tracker
+    <div className={CSS_CLASSES.CONTAINERS.MAIN}>
+      <div className={CSS_CLASSES.CONTAINERS.CONTENT}>
+        <div className={CSS_CLASSES.CONTAINERS.HEADER}>
+          <h1 className={CSS_CLASSES.TEXT.TITLE}>
+            {LABELS.COMMON.FINANCIAL_PROGRESS_TRACKER}
           </h1>
-          <p className="text-slate-600">Track your savings goals or debt payoff</p>
+          <p className={CSS_CLASSES.TEXT.SUBTITLE}>{LABELS.COMMON.TRACK_SAVINGS_DEBT}</p>
         </div>
 
         <ModeSelector mode={mode} onModeChange={handleModeChange} />
@@ -209,7 +217,7 @@ export default function DebtSavingsThermometer() {
           onUpdateRate={setInterestRate}
         />
 
-        {mode === 'debt' && (
+        {mode === MODES.DEBT && (
           <PendingInterestBanner
             pendingInterest={pendingInterest}
             daysPending={daysPending}
@@ -218,7 +226,7 @@ export default function DebtSavingsThermometer() {
           />
         )}
 
-        <div className="bg-white rounded-lg shadow-md p-8 mb-6">
+        <div className={CSS_CLASSES.CARDS.PRIMARY}>
           <div className="flex items-end justify-center gap-8">
             <ThermometerDisplay mode={mode} percentage={percentage} />
             <StatsPanel 
@@ -236,7 +244,7 @@ export default function DebtSavingsThermometer() {
           mode={mode} 
           onAddTransaction={handleAddTransaction}
           interestRate={interestRate}
-          currentBalance={mode === 'savings' ? current : remaining}
+          currentBalance={mode === MODES.SAVINGS ? current : remaining}
         />
 
         <Chart transactions={transactions} mode={mode} />
@@ -247,12 +255,12 @@ export default function DebtSavingsThermometer() {
           onDeleteTransaction={handleDeleteTransaction}
         />
 
-        <div className="text-center">
+        <div className={CSS_CLASSES.CONTAINERS.CENTER}>
           <button
             onClick={handleReset}
-            className="px-6 py-2 text-sm text-slate-600 hover:text-slate-800 underline"
+            className={CSS_CLASSES.BUTTONS.RESET}
           >
-            Reset All Data
+            {LABELS.COMMON.RESET_ALL_DATA}
           </button>
         </div>
       </div>
