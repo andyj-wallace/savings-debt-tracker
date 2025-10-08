@@ -1,23 +1,61 @@
 import React, { useState } from 'react';
 import { Settings, Info } from 'lucide-react';
+import { useFieldValidation } from '../hooks/useValidation';
+import { MODES, LABELS, CSS_CLASSES, DEFAULTS } from '../constants';
 
 export default function InterestSettings({ interestRate, onUpdateRate, mode }) {
   const [isEditing, setIsEditing] = useState(false);
   const [tempRate, setTempRate] = useState('');
 
-  if (mode !== 'debt') return null;
+  // Validation hook for interest rate input
+  const rateValidation = useFieldValidation('interestRate', {
+    mode,
+    validateOnChange: false,
+    validateOnBlur: true
+  });
+
+  if (mode !== MODES.DEBT) return null;
 
   // Ensure interestRate is a number
-  const rate = typeof interestRate === 'number' ? interestRate : parseFloat(interestRate) || 18.99;
+  const rate = typeof interestRate === 'number' ? interestRate : parseFloat(interestRate) || DEFAULTS.INTEREST_RATE;
 
 
-  const handleUpdate = () => {
-    const newRate = parseFloat(tempRate);
-    if (!isNaN(newRate) && newRate >= 0 && newRate <= 100) {
-      onUpdateRate(newRate);
+  const handleUpdate = async () => {
+    if (!tempRate.trim()) {
+      return;
+    }
+
+    // Validate the interest rate
+    const validation = await rateValidation.validate(tempRate);
+
+    if (validation.isValid) {
+      onUpdateRate(validation.value);
       setTempRate('');
       setIsEditing(false);
+      rateValidation.clear();
     }
+  };
+
+  const handleInputChange = (e) => {
+    const value = e.target.value;
+    setTempRate(value);
+
+    // Clear previous validation error when user starts typing
+    if (rateValidation.hasError) {
+      rateValidation.clear();
+    }
+  };
+
+  const handleInputBlur = async () => {
+    if (tempRate.trim()) {
+      await rateValidation.validate(tempRate);
+    }
+  };
+
+  const handleCancel = () => {
+    setIsEditing(false);
+    setTempRate('');
+    rateValidation.clear();
   };
 
   return (
@@ -25,7 +63,7 @@ export default function InterestSettings({ interestRate, onUpdateRate, mode }) {
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           <Settings size={20} className="text-slate-700" />
-          <h2 className="text-lg font-semibold text-slate-700">Interest Settings</h2>
+          <h2 className={CSS_CLASSES.TEXT.SECTION_TITLE}>{LABELS.COMMON.INTEREST_SETTINGS}</h2>
         </div>
         {!isEditing && (
           <button
@@ -40,9 +78,9 @@ export default function InterestSettings({ interestRate, onUpdateRate, mode }) {
       {!isEditing ? (
         <div className="flex items-center justify-between bg-slate-50 rounded-lg p-4">
           <div>
-            <div className="text-sm text-slate-600">Annual Interest Rate (APR)</div>
-            <div className="text-2xl font-bold text-slate-800">{rate.toFixed(2)}%</div>
-            <div className="text-xs text-slate-500 mt-1">
+            <div className={CSS_CLASSES.TEXT.LABEL}>{LABELS.COMMON.ANNUAL_INTEREST_RATE}</div>
+            <div className={CSS_CLASSES.TEXT.VALUE}>{rate.toFixed(2)}%</div>
+            <div className={CSS_CLASSES.TEXT.SMALL_TEXT}>
               Daily Rate: {(rate / 365).toFixed(4)}%
             </div>
           </div>
@@ -51,34 +89,46 @@ export default function InterestSettings({ interestRate, onUpdateRate, mode }) {
       ) : (
         <div className="space-y-3">
           <div>
-            <label className="block text-sm text-slate-600 mb-2">
-              Enter Annual Interest Rate (APR)
+            <label className={`block ${CSS_CLASSES.TEXT.LABEL} mb-2`}>
+              Enter {LABELS.COMMON.ANNUAL_INTEREST_RATE}
             </label>
             <input
               type="number"
               step="0.01"
               min="0"
-              max="100"
+              max="99.99"
               value={tempRate}
-              onChange={(e) => setTempRate(e.target.value)}
+              onChange={handleInputChange}
+              onBlur={handleInputBlur}
               placeholder={`${rate.toFixed(2)}%`}
-              className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 transition-colors ${
+                rateValidation.hasError
+                  ? 'border-red-500 focus:ring-red-500 focus:border-red-500'
+                  : 'border-slate-300 focus:ring-blue-500 focus:border-blue-500'
+              }`}
               autoFocus
             />
+            {rateValidation.showError && (
+              <div className="mt-1 text-sm text-red-600">
+                {rateValidation.error}
+              </div>
+            )}
           </div>
           <div className="flex gap-2">
             <button
               onClick={handleUpdate}
-              className="flex-1 px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+              disabled={!tempRate.trim() || rateValidation.hasError}
+              className={`flex-1 px-6 py-2 rounded-lg font-medium transition-colors ${
+                !tempRate.trim() || rateValidation.hasError
+                  ? 'bg-slate-300 text-slate-500 cursor-not-allowed'
+                  : 'bg-blue-500 text-white hover:bg-blue-600'
+              }`}
             >
               Save
             </button>
             <button
-              onClick={() => {
-                setIsEditing(false);
-                setTempRate('');
-              }}
-              className="flex-1 px-6 py-2 bg-slate-300 text-slate-700 rounded-lg hover:bg-slate-400 transition-colors"
+              onClick={handleCancel}
+              className={CSS_CLASSES.BUTTONS.SECONDARY}
             >
               Cancel
             </button>
