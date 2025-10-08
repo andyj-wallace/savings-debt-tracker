@@ -1,8 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import { useLocalStorage } from '../hooks/useLocalStorage';
-import { 
-  calculateInterest, 
-  getDaysSinceLastTransaction,
+import {
   calculatePendingInterest,
   shouldApplyInterest
 } from '../utils/interestCalculator';
@@ -27,7 +25,7 @@ export default function DebtSavingsThermometer() {
   const [daysPending, setDaysPending] = useState(0);
 
   // Ensure transactions is always an array
-  const transactions = Array.isArray(transactionsRaw) ? transactionsRaw : [];
+  const transactions = useMemo(() => Array.isArray(transactionsRaw) ? transactionsRaw : [], [transactionsRaw]);
 
   // Calculate current total from transactions
   const current = transactions.reduce((sum, t) => sum + t.amount, 0);
@@ -66,18 +64,7 @@ export default function DebtSavingsThermometer() {
     }
   }, [current, interestRate, lastInterestDate, mode, transactions, remaining]);
 
-  // Auto-apply interest on app load if 30+ days have passed
-  useEffect(() => {
-    if (mode === 'debt' && remaining > 0) {
-      const lastDate = lastInterestDate || (transactions.length > 0 ? transactions[transactions.length - 1].date : null);
-      
-      if (shouldApplyInterest(lastDate, 30)) {
-        applyInterestCharge();
-      }
-    }
-  }, []); // Only run once on mount
-
-  const applyInterestCharge = () => {
+  const applyInterestCharge = useCallback(() => {
     if (mode !== 'debt' || remaining <= 0) return;
 
     const lastDate = lastInterestDate || (transactions.length > 0 ? transactions[transactions.length - 1].date : new Date().toISOString());
@@ -103,7 +90,18 @@ export default function DebtSavingsThermometer() {
       setPendingInterest(0);
       setDaysPending(0);
     }
-  };
+  }, [current, interestRate, lastInterestDate, mode, remaining, setLastInterestDate, setPendingInterest, setDaysPending, setTransactions, transactions]);
+
+  // Auto-apply interest on app load if 30+ days have passed
+  useEffect(() => {
+    if (mode === 'debt' && remaining > 0) {
+      const lastDate = lastInterestDate || (transactions.length > 0 ? transactions[transactions.length - 1].date : null);
+
+      if (shouldApplyInterest(lastDate, 30)) {
+        applyInterestCharge();
+      }
+    }
+  }, [applyInterestCharge, lastInterestDate, mode, remaining, transactions]);
 
   const handleModeChange = (newMode) => {
     setMode(newMode);
