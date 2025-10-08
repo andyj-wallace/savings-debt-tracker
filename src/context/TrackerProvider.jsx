@@ -18,10 +18,9 @@ import {
   INTEREST,
   LABELS
 } from '../constants';
-import {
-  calculatePendingInterest,
-  shouldApplyInterest
-} from '../utils/interestCalculator';
+import TransactionService from '../services/TransactionService';
+import InterestService from '../services/InterestService';
+import CalculationService from '../services/CalculationService';
 
 /**
  * TrackerProvider Component
@@ -51,85 +50,77 @@ export const TrackerProvider = ({ children }) => {
     return Array.isArray(transactionsRaw) ? transactionsRaw : [];
   }, [transactionsRaw]);
 
-  // Calculate current total from transactions
+  // Calculate current total from transactions using CalculationService
   const current = useMemo(() => {
-    return transactions.reduce((sum, t) => sum + t.amount, 0);
+    const result = CalculationService.calculateTotalFromTransactions(transactions);
+    return result.success ? result.data : 0;
   }, [transactions]);
 
-  // Calculate percentage and remaining based on mode
+  // Calculate percentage and remaining based on mode using CalculationService
   const { percentage, remaining } = useMemo(() => {
-    let calculatedPercentage;
-    let calculatedRemaining;
+    const result = CalculationService.calculateProgress(mode, current, goal);
 
-    if (mode === MODES.SAVINGS) {
-      // For savings: percentage of goal reached
-      calculatedPercentage = Math.min((current / goal) * 100, 100);
-      calculatedRemaining = goal - current;
+    if (result.success) {
+      return result.data;
     } else {
-      // For debt: percentage of debt paid off
-      // current is negative (we subtract payments), so debt remaining is goal + current
-      const debtRemaining = goal + current; // current is negative, so this subtracts
-      const amountPaidOff = goal - debtRemaining;
-      calculatedPercentage = Math.min((amountPaidOff / goal) * 100, 100);
-      calculatedRemaining = debtRemaining;
+      console.error('Progress calculation error:', result.error);
+      // Fallback to default values
+      return {
+        percentage: 0,
+        remaining: goal || 0
+      };
     }
-
-    return {
-      percentage: calculatedPercentage,
-      remaining: calculatedRemaining
-    };
   }, [mode, current, goal]);
 
-  // Calculate and display pending interest
+  // Calculate and display pending interest using InterestService
   useEffect(() => {
-    if (mode === MODES.DEBT && remaining > 0) {
-      const lastDate = lastInterestDate ||
-        (transactions.length > 0 ? transactions[transactions.length - 1].date : new Date().toISOString());
+    const result = InterestService.updatePendingInterest(
+      mode,
+      remaining,
+      interestRate,
+      lastInterestDate,
+      transactions
+    );
 
-      const { pendingInterest: pending, daysPending: days } = calculatePendingInterest(
-        remaining, // Use remaining debt, not current
-        interestRate,
-        lastDate
-      );
-
-      setPendingInterest(pending);
-      setDaysPending(days);
+    if (result.success) {
+      setPendingInterest(result.data.pendingInterest);
+      setDaysPending(result.data.daysPending);
     } else {
+      console.error('Pending interest calculation error:', result.error);
       setPendingInterest(0);
       setDaysPending(0);
     }
   }, [current, interestRate, lastInterestDate, mode, transactions, remaining]);
 
-  // Apply interest charge function
+  // Apply interest charge function using InterestService
   const applyInterestCharge = useCallback(() => {
     if (mode !== MODES.DEBT || remaining <= 0) return;
 
-    const lastDate = lastInterestDate ||
-      (transactions.length > 0 ? transactions[transactions.length - 1].date : new Date().toISOString());
+    try {
+      const lastDate = lastInterestDate ||
+        (transactions.length > 0 ? transactions[transactions.length - 1].date : new Date().toISOString());
 
-    const { pendingInterest: interest, daysPending: days } = calculatePendingInterest(
-      remaining,
-      interestRate,
-      lastDate
-    );
+      const result = InterestService.applyInterestCharge(
+        remaining,
+        interestRate,
+        lastDate,
+        current
+      );
 
-    if (interest > 0) {
-      const interestTransaction = {
-        id: Date.now(),
-        amount: interest,
-        date: new Date().toISOString(),
-        note: LABELS.COMMON.MONTHLY_INTEREST_CHARGE,
-        type: 'interest',
-        days: days,
-        runningTotal: current + interest,
-      };
-
-      setTransactions([...transactions, interestTransaction]);
-      setLastInterestDate(new Date().toISOString());
-      setPendingInterest(0);
-      setDaysPending(0);
+      if (result.success && result.data.interestApplied) {
+        setTransactions([...transactions, result.data.transaction]);
+        setLastInterestDate(result.data.newInterestDate);
+        setPendingInterest(0);
+        setDaysPending(0);
+      } else if (!result.success) {
+        console.error('Apply interest charge error:', result.error);
+        setError('Failed to apply interest charge. Please try again.');
+      }
+    } catch (err) {
+      console.error('Apply interest charge error:', err);
+      setError('Failed to apply interest charge. Please try again.');
     }
-  }, [current, interestRate, lastInterestDate, mode, remaining, setLastInterestDate, setPendingInterest, setDaysPending, setTransactions, transactions]);
+  }, [current, interestRate, lastInterestDate, mode, remaining, setLastInterestDate, setTransactions, transactions]);
 
   // Auto-apply interest on app load if 30+ days have passed
   useEffect(() => {
@@ -137,8 +128,12 @@ export const TrackerProvider = ({ children }) => {
       const lastDate = lastInterestDate ||
         (transactions.length > 0 ? transactions[transactions.length - 1].date : null);
 
-      if (shouldApplyInterest(lastDate, INTEREST.AUTO_APPLY_THRESHOLD_DAYS)) {
+      const shouldApplyResult = InterestService.shouldAutoApplyInterest(lastDate, INTEREST.AUTO_APPLY_THRESHOLD_DAYS);
+
+      if (shouldApplyResult.success && shouldApplyResult.data) {
         applyInterestCharge();
+      } else if (!shouldApplyResult.success) {
+        console.error('Auto-apply interest check error:', shouldApplyResult.error);
       }
     }
   }, [applyInterestCharge, lastInterestDate, mode, remaining, transactions]);
@@ -153,51 +148,41 @@ export const TrackerProvider = ({ children }) => {
     setHasUnsavedChanges(false);
   }, [setMode, setTransactions, setGoal, setLastInterestDate]);
 
-  // Handle adding new transactions
+  // Handle adding new transactions using TransactionService
   const handleAddTransaction = useCallback((amount, note) => {
     try {
       setError(null);
-      let newTransactions = [...transactions];
 
-      // For debt mode, add any pending interest first
-      if (mode === MODES.DEBT && remaining > 0 && pendingInterest > 0) {
-        const interestTransaction = {
-          id: Date.now(),
-          amount: pendingInterest,
-          date: new Date().toISOString(),
-          note: LABELS.COMMON.INTEREST_CHARGE,
-          type: 'interest',
-          days: daysPending,
-          runningTotal: current + pendingInterest,
-        };
-        newTransactions.push(interestTransaction);
-        setLastInterestDate(new Date().toISOString());
+      const result = TransactionService.addTransaction(
+        transactions,
+        amount,
+        note,
+        mode,
+        pendingInterest,
+        daysPending,
+        current,
+        remaining
+      );
+
+      if (result.success) {
+        setTransactions(result.data.transactions);
+
+        // Update last interest date if interest was added
+        if (result.data.addedInterest) {
+          setLastInterestDate(new Date().toISOString());
+        }
+
+        // Reset pending interest after adding transaction
+        if (mode === MODES.DEBT) {
+          setPendingInterest(0);
+          setDaysPending(0);
+        }
+
+        setHasUnsavedChanges(false);
+      } else {
+        console.error('Add transaction error:', result.error);
+        setError(result.error || 'Failed to add transaction. Please try again.');
       }
-
-      // Add the payment/deposit transaction
-      const newRunningTotal = newTransactions.length > 0
-        ? newTransactions[newTransactions.length - 1].runningTotal + (mode === MODES.DEBT ? -amount : amount)
-        : current + (mode === MODES.DEBT ? -amount : amount);
-
-      const paymentTransaction = {
-        id: Date.now() + 1,
-        amount: mode === MODES.DEBT ? -amount : amount,
-        date: new Date().toISOString(),
-        note: note,
-        type: 'transaction',
-        runningTotal: newRunningTotal,
-      };
-
-      newTransactions.push(paymentTransaction);
-      setTransactions(newTransactions);
-
-      // Reset pending interest after adding transaction
-      if (mode === MODES.DEBT) {
-        setPendingInterest(0);
-        setDaysPending(0);
-      }
-
-      setHasUnsavedChanges(false);
     } catch (err) {
       console.error('Error adding transaction:', err);
       setError('Failed to add transaction. Please try again.');
@@ -207,28 +192,27 @@ export const TrackerProvider = ({ children }) => {
     setTransactions, setLastInterestDate
   ]);
 
-  // Handle deleting transactions
+  // Handle deleting transactions using TransactionService
   const handleDeleteTransaction = useCallback((id) => {
     if (window.confirm(LABELS.COMMON.DELETE_CONFIRMATION)) {
       try {
         setError(null);
-        const updatedTransactions = transactions.filter((t) => t.id !== id);
 
-        // Recalculate running totals
-        let runningTotal = 0;
-        const recalculatedTransactions = updatedTransactions.map((t) => {
-          runningTotal += t.amount;
-          return { ...t, runningTotal };
-        });
+        const result = TransactionService.deleteTransaction(transactions, id);
 
-        setTransactions(recalculatedTransactions);
+        if (result.success) {
+          setTransactions(result.data.transactions);
 
-        // Reset last interest date if no transactions remain
-        if (recalculatedTransactions.length === 0) {
-          setLastInterestDate(null);
+          // Reset last interest date if no transactions remain
+          if (result.data.shouldResetInterestDate) {
+            setLastInterestDate(null);
+          }
+
+          setHasUnsavedChanges(false);
+        } else {
+          console.error('Delete transaction error:', result.error);
+          setError(result.error || 'Failed to delete transaction. Please try again.');
         }
-
-        setHasUnsavedChanges(false);
       } catch (err) {
         console.error('Error deleting transaction:', err);
         setError('Failed to delete transaction. Please try again.');
