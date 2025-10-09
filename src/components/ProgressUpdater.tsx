@@ -4,7 +4,10 @@ import { useValidation } from '../hooks/useValidation';
 import { useTransactions } from '../hooks/useTransactions';
 import { useInterest } from '../hooks/useInterest';
 import { useGoalStats } from '../hooks/useGoalStats';
-import { MODES, getModeLabels, getModeColors, CSS_CLASSES } from '../constants';
+import { MODES, getModeLabels, CSS_CLASSES } from '../constants';
+import { cardPresets } from '../styles/cardStyles';
+import { inputPresets, inputStates } from '../styles/inputStyles';
+import { buttonPresets } from '../styles/buttonStyles';
 
 export default function ProgressUpdater() {
   const [isEditing, setIsEditing] = useState(false);
@@ -32,7 +35,6 @@ export default function ProgressUpdater() {
   });
 
   const modeLabels = getModeLabels(mode);
-  const modeColors = getModeColors(mode);
 
   const handleUpdate = async () => {
     if (!amount.trim()) {
@@ -106,8 +108,12 @@ export default function ProgressUpdater() {
   const amountFieldState = validation.getFieldState('amount');
   const noteFieldState = validation.getFieldState('note');
 
+  const amountInputState = inputStates.getValidationClasses(undefined, amountFieldState.hasError, false);
+  const noteInputState = inputStates.getValidationClasses(undefined, noteFieldState.hasError, false);
+  const isDisabled = !amount.trim() || hasErrors;
+
   return (
-    <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+    <div className={`${cardPresets.formCard()} mb-6`}>
       <h2 className={CSS_CLASSES.TEXT.SECTION_TITLE}>
         {modeLabels.ACTION}
       </h2>
@@ -130,9 +136,7 @@ export default function ProgressUpdater() {
       {!isEditing ? (
         <button
           onClick={() => setIsEditing(true)}
-          className={`w-full py-3 rounded-lg font-medium transition-colors ${
-            modeColors.PRIMARY
-          } hover:${modeColors.PRIMARY_HOVER} text-white`}
+          className={`w-full ${buttonPresets.modeAction(mode)}`}
         >
           Add Transaction
         </button>
@@ -145,11 +149,7 @@ export default function ProgressUpdater() {
               onChange={handleAmountChange}
               onBlur={handleAmountBlur}
               placeholder="Enter amount"
-              className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 transition-colors ${
-                amountFieldState.hasError
-                  ? 'border-red-500 focus:ring-red-500 focus:border-red-500'
-                  : 'border-slate-300 focus:ring-blue-500 focus:border-blue-500'
-              }`}
+              className={`w-full ${inputPresets.modeCurrencyInput(mode, amountInputState)}`}
               min="0"
               step="0.01"
               autoFocus
@@ -167,11 +167,7 @@ export default function ProgressUpdater() {
               onChange={handleNoteChange}
               onBlur={handleNoteBlur}
               placeholder="Add note (optional)"
-              className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 transition-colors ${
-                noteFieldState.hasError
-                  ? 'border-red-500 focus:ring-red-500 focus:border-red-500'
-                  : 'border-slate-300 focus:ring-blue-500 focus:border-blue-500'
-              }`}
+              className={`w-full ${inputPresets.noteInput(noteInputState)}`}
               maxLength="200"
             />
             {noteFieldState.showError && (
@@ -183,18 +179,14 @@ export default function ProgressUpdater() {
           <div className="flex gap-2">
             <button
               onClick={handleUpdate}
-              disabled={!amount.trim() || hasErrors}
-              className={`flex-1 px-6 py-2 rounded-lg font-medium transition-colors ${
-                !amount.trim() || hasErrors
-                  ? 'bg-slate-300 text-slate-500 cursor-not-allowed'
-                  : `${modeColors.PRIMARY} hover:${modeColors.PRIMARY_HOVER} text-white`
-              }`}
+              disabled={isDisabled}
+              className={`flex-1 ${buttonPresets.modeAction(mode, isDisabled)}`}
             >
               Save
             </button>
             <button
               onClick={handleCancel}
-              className={CSS_CLASSES.BUTTONS.SECONDARY}
+              className={buttonPresets.formCancel()}
             >
               Cancel
             </button>

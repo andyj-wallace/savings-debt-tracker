@@ -3,7 +3,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { formatCurrency } from '../utils/formatCurrency';
 import { formatShortDate } from '../utils/dateUtils';
 
-export default function Chart({ transactions, mode }) {
+export default function Chart({ transactions, mode }: any) {
   if (transactions.length === 0) {
     return null;
   }
@@ -15,7 +15,7 @@ export default function Chart({ transactions, mode }) {
     fullDate: transaction.date,
   }));
 
-  const CustomTooltip = ({ active, payload }) => {
+  const CustomTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
       return (
         <div className="bg-white p-3 rounded-lg shadow-lg border border-slate-200">

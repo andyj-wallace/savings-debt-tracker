@@ -14,6 +14,8 @@ import ProgressUpdater from './ProgressUpdater';
 import TransactionHistory from './TransactionHistory';
 import Chart from './Chart';
 import PendingInterestBanner from './PendingInterestBanner';
+import ErrorBoundary from './ErrorBoundary';
+import ChartErrorBoundary from './ChartErrorBoundary';
 
 export default function DebtSavingsThermometer() {
   const {
@@ -60,18 +62,26 @@ export default function DebtSavingsThermometer() {
           />
         )}
 
-        <div className={CSS_CLASSES.CARDS.PRIMARY}>
-          <div className="flex items-end justify-center gap-8">
-            <ThermometerDisplay mode={mode} percentage={percentage} />
-            <StatsPanel />
+        <ErrorBoundary>
+          <div className={CSS_CLASSES.CARDS.PRIMARY}>
+            <div className="flex items-end justify-center gap-8">
+              <ThermometerDisplay mode={mode} percentage={percentage} />
+              <StatsPanel />
+            </div>
           </div>
-        </div>
+        </ErrorBoundary>
 
-        <ProgressUpdater />
+        <ErrorBoundary>
+          <ProgressUpdater />
+        </ErrorBoundary>
 
-        <Chart transactions={transactions} mode={mode} />
+        <ChartErrorBoundary chartType="Progress Chart" data={transactions}>
+          <Chart transactions={transactions} mode={mode} />
+        </ChartErrorBoundary>
 
-        <TransactionHistory />
+        <ErrorBoundary>
+          <TransactionHistory />
+        </ErrorBoundary>
 
         <div className={CSS_CLASSES.CONTAINERS.CENTER}>
           <button

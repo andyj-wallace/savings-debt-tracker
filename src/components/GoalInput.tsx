@@ -2,6 +2,9 @@ import React, { useState } from 'react';
 import { formatCurrency } from '../utils/formatCurrency';
 import { useFieldValidation } from '../hooks/useValidation';
 import { CSS_CLASSES, getModeLabels } from '../constants';
+import { cardPresets } from '../styles/cardStyles';
+import { inputPresets, inputStates } from '../styles/inputStyles';
+import { buttonPresets } from '../styles/buttonStyles';
 
 export default function GoalInput({ mode, goal, onUpdateGoal }) {
   const [tempGoal, setTempGoal] = useState('');
@@ -45,9 +48,11 @@ export default function GoalInput({ mode, goal, onUpdateGoal }) {
   };
 
   const modeLabels = getModeLabels(mode);
+  const inputState = inputStates.getValidationClasses(undefined, goalValidation.hasError, false);
+  const isDisabled = !tempGoal.trim() || goalValidation.hasError;
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+    <div className={`${cardPresets.formCard()} mb-6`}>
       <h2 className={CSS_CLASSES.TEXT.SECTION_TITLE}>
         {modeLabels.TITLE}
       </h2>
@@ -59,11 +64,7 @@ export default function GoalInput({ mode, goal, onUpdateGoal }) {
             onChange={handleInputChange}
             onBlur={handleInputBlur}
             placeholder={formatCurrency(goal)}
-            className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 transition-colors ${
-              goalValidation.hasError
-                ? 'border-red-500 focus:ring-red-500 focus:border-red-500'
-                : 'border-slate-300 focus:ring-blue-500 focus:border-blue-500'
-            }`}
+            className={`w-full ${inputPresets.goalInput(mode, inputState)}`}
             min="0"
             step="0.01"
           />
@@ -75,12 +76,8 @@ export default function GoalInput({ mode, goal, onUpdateGoal }) {
         </div>
         <button
           onClick={handleUpdate}
-          disabled={!tempGoal.trim() || goalValidation.hasError}
-          className={`px-6 py-2 rounded-lg font-medium transition-colors ${
-            !tempGoal.trim() || goalValidation.hasError
-              ? 'bg-slate-300 text-slate-500 cursor-not-allowed'
-              : 'bg-blue-500 text-white hover:bg-blue-600'
-          }`}
+          disabled={isDisabled}
+          className={buttonPresets.formSubmit(isDisabled)}
         >
           Update
         </button>
