@@ -2,9 +2,17 @@ import React, { useState } from 'react';
 import { ChevronDown, ChevronUp, TrendingUp, TrendingDown, Percent } from 'lucide-react';
 import { formatCurrency } from '../utils/formatCurrency';
 import { formatDate } from '../utils/dateUtils';
+import { useTransactions } from '../hooks/useTransactions';
+import { useGoalStats } from '../hooks/useGoalStats';
 
-export default function TransactionHistory({ transactions, mode, onDeleteTransaction }) {
+export default function TransactionHistory() {
+  const { transactions, deleteTransaction } = useTransactions();
+  const { detailedStats } = useGoalStats();
+  const mode = detailedStats.mode;
   const [isExpanded, setIsExpanded] = useState(false);
+
+  // Show transactions in reverse order (most recent first)
+  const reversedTransactions = [...transactions].reverse();
 
   if (transactions.length === 0) {
     return null;
@@ -46,7 +54,7 @@ export default function TransactionHistory({ transactions, mode, onDeleteTransac
 
       {isExpanded && (
         <div className="space-y-2 max-h-96 overflow-y-auto">
-          {transactions.map((transaction) => (
+          {reversedTransactions.map((transaction) => (
             <div
               key={transaction.id}
               className="flex items-center justify-between p-3 bg-slate-50 rounded-lg hover:bg-slate-100 transition-colors"
@@ -85,7 +93,7 @@ export default function TransactionHistory({ transactions, mode, onDeleteTransac
                 </div>
                 {transaction.type !== 'interest' && (
                   <button
-                    onClick={() => onDeleteTransaction(transaction.id)}
+                    onClick={() => deleteTransaction(transaction.id)}
                     className="text-red-500 hover:text-red-700 text-sm underline"
                   >
                     Delete

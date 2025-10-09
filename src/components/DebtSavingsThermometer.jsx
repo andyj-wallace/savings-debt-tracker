@@ -21,14 +21,10 @@ export default function DebtSavingsThermometer() {
     goal,
     transactions,
     interestRate,
-    current,
-    remaining,
     percentage,
     pendingInterest,
     daysPending,
     handleModeChange,
-    handleAddTransaction,
-    handleDeleteTransaction,
     handleReset,
     applyInterestCharge,
     setGoal,
@@ -67,31 +63,15 @@ export default function DebtSavingsThermometer() {
         <div className={CSS_CLASSES.CARDS.PRIMARY}>
           <div className="flex items-end justify-center gap-8">
             <ThermometerDisplay mode={mode} percentage={percentage} />
-            <StatsPanel 
-              mode={mode} 
-              goal={goal} 
-              current={current} 
-              remaining={remaining} 
-              percentage={percentage}
-              pendingInterest={pendingInterest}
-            />
+            <StatsPanel />
           </div>
         </div>
 
-        <ProgressUpdater 
-          mode={mode} 
-          onAddTransaction={handleAddTransaction}
-          interestRate={interestRate}
-          currentBalance={mode === MODES.SAVINGS ? current : remaining}
-        />
+        <ProgressUpdater />
 
         <Chart transactions={transactions} mode={mode} />
 
-        <TransactionHistory 
-          transactions={[...transactions].reverse()} 
-          mode={mode}
-          onDeleteTransaction={handleDeleteTransaction}
-        />
+        <TransactionHistory />
 
         <div className={CSS_CLASSES.CONTAINERS.CENTER}>
           <button

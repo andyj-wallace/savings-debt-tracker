@@ -1,12 +1,28 @@
 import React, { useState } from 'react';
 import { AlertCircle } from 'lucide-react';
 import { useValidation } from '../hooks/useValidation';
+import { useTransactions } from '../hooks/useTransactions';
+import { useInterest } from '../hooks/useInterest';
+import { useGoalStats } from '../hooks/useGoalStats';
 import { MODES, getModeLabels, getModeColors, CSS_CLASSES } from '../constants';
 
-export default function ProgressUpdater({ mode, onAddTransaction, interestRate, currentBalance }) {
+export default function ProgressUpdater() {
   const [isEditing, setIsEditing] = useState(false);
   const [amount, setAmount] = useState('');
   const [note, setNote] = useState('');
+
+  // Custom hooks
+  const { addTransaction } = useTransactions();
+  const {
+    isInterestApplicable,
+    pendingInterest,
+    interestRate,
+    hasPendingInterest
+  } = useInterest();
+  const { detailedStats } = useGoalStats();
+
+  const mode = detailedStats.mode;
+  const currentBalance = mode === MODES.DEBT ? detailedStats.debtRemaining : detailedStats.current;
 
   // Validation hook for transaction form
   const validation = useValidation({
@@ -27,11 +43,18 @@ export default function ProgressUpdater({ mode, onAddTransaction, interestRate, 
     const validationResult = validation.presets.newTransaction(amount, note);
 
     if (validationResult.isValid) {
-      onAddTransaction(validationResult.results.amount.value, validationResult.results.note.value);
-      setAmount('');
-      setNote('');
-      setIsEditing(false);
-      validation.clearErrors();
+      const result = await addTransaction(
+        validationResult.results.amount.value,
+        validationResult.results.note.value
+      );
+
+      if (result.success) {
+        setAmount('');
+        setNote('');
+        setIsEditing(false);
+        validation.clearErrors();
+      }
+      // Error handling is done by the hook
     } else {
       // Set errors from validation result
       Object.entries(validationResult.errors).forEach(([field, error]) => {
@@ -89,12 +112,17 @@ export default function ProgressUpdater({ mode, onAddTransaction, interestRate, 
         {modeLabels.ACTION}
       </h2>
       
-      {mode === MODES.DEBT && currentBalance > 0 && (
+      {isInterestApplicable && currentBalance > 0 && (
         <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-4 flex items-start gap-2">
           <AlertCircle size={18} className="text-yellow-600 flex-shrink-0 mt-0.5" />
           <div className="text-sm text-yellow-800">
-            <strong>Note:</strong> Interest will be calculated and added based on your current balance 
+            <strong>Note:</strong> Interest will be calculated and added based on your current balance
             of ${currentBalance.toFixed(2)} at {interestRate.toFixed(2)}% APR.
+            {hasPendingInterest && (
+              <div className="mt-1">
+                <strong>Pending Interest:</strong> ${pendingInterest.toFixed(2)} will be added automatically.
+              </div>
+            )}
           </div>
         </div>
       )}
