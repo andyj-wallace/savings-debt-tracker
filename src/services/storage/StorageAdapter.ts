@@ -33,6 +33,16 @@ export const STORAGE_ERROR_CODES = {
 };
 
 /**
+ * Storage result interface
+ */
+export interface StorageResult {
+  success: boolean;
+  data: unknown;
+  error: string | null;
+  errorCode: string | null;
+}
+
+/**
  * Abstract StorageAdapter class
  * All storage adapters must extend this class and implement its methods
  */
@@ -43,7 +53,7 @@ export class StorageAdapter {
    * @returns {Promise<StorageResult>} Storage operation result
    * @abstract
    */
-  async get(key) {
+  async get(key: string): Promise<StorageResult> {
     throw new Error('StorageAdapter.get() must be implemented by subclass');
   }
 
@@ -54,7 +64,7 @@ export class StorageAdapter {
    * @returns {Promise<StorageResult>} Storage operation result
    * @abstract
    */
-  async set(key, value) {
+  async set(key: string, value: unknown): Promise<StorageResult> {
     throw new Error('StorageAdapter.set() must be implemented by subclass');
   }
 
@@ -64,7 +74,7 @@ export class StorageAdapter {
    * @returns {Promise<StorageResult>} Storage operation result
    * @abstract
    */
-  async remove(key) {
+  async remove(key: string): Promise<StorageResult> {
     throw new Error('StorageAdapter.remove() must be implemented by subclass');
   }
 
@@ -73,7 +83,7 @@ export class StorageAdapter {
    * @returns {Promise<StorageResult>} Storage operation result
    * @abstract
    */
-  async clear() {
+  async clear(): Promise<StorageResult> {
     throw new Error('StorageAdapter.clear() must be implemented by subclass');
   }
 
@@ -82,7 +92,7 @@ export class StorageAdapter {
    * @returns {Promise<boolean>} Whether storage is available
    * @abstract
    */
-  async isAvailable() {
+  async isAvailable(): Promise<boolean> {
     throw new Error('StorageAdapter.isAvailable() must be implemented by subclass');
   }
 
@@ -91,7 +101,7 @@ export class StorageAdapter {
    * @returns {Promise<string[]>} Array of storage keys
    * @abstract
    */
-  async getAllKeys() {
+  async getAllKeys(): Promise<string[]> {
     throw new Error('StorageAdapter.getAllKeys() must be implemented by subclass');
   }
 
@@ -100,8 +110,17 @@ export class StorageAdapter {
    * @returns {Promise<Object>} Storage size information
    * @abstract
    */
-  async getStorageInfo() {
+  async getStorageInfo(): Promise<unknown> {
     throw new Error('StorageAdapter.getStorageInfo() must be implemented by subclass');
+  }
+
+  /**
+   * Get all application keys from storage
+   * @returns {Promise<string[]>} Array of app-specific storage keys
+   * @abstract
+   */
+  async getAppKeys(): Promise<string[]> {
+    throw new Error('StorageAdapter.getAppKeys() must be implemented by subclass');
   }
 
   /**

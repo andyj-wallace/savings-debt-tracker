@@ -53,11 +53,12 @@ export const useTransactions = () => {
         remaining
       );
 
-      if (result.success) {
-        setTransactions(result.data.transactions);
+      if (result.success && result.data) {
+        const data = result.data as { transactions: unknown[]; addedInterest: boolean };
+        setTransactions(data.transactions);
 
         // Update last interest date if interest was added
-        if (result.data.addedInterest) {
+        if (data.addedInterest) {
           setLastInterestDate(new Date().toISOString());
         }
 
@@ -73,15 +74,16 @@ export const useTransactions = () => {
           success: true,
           data: {
             transactionAdded: true,
-            interestAdded: result.data.addedInterest,
-            newTransactions: result.data.transactions
+            interestAdded: data.addedInterest,
+            newTransactions: data.transactions
           }
         };
       } else {
-        setError(result.error || 'Failed to add transaction. Please try again.');
+        const errorMsg = 'error' in result ? result.error : 'Failed to add transaction. Please try again.';
+        setError(errorMsg || 'Failed to add transaction. Please try again.');
         return {
           success: false,
-          error: result.error
+          error: errorMsg
         };
       }
     } catch (err) {
@@ -181,7 +183,7 @@ export const useTransactions = () => {
    */
   const getRecentTransactions = useCallback((count = 5) => {
     return [...transactions]
-      .sort((a, b) => new Date(b.date) - new Date(a.date))
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
       .slice(0, count);
   }, [transactions]);
 

@@ -28,7 +28,13 @@ import { createError, ERROR_SEVERITY } from '../utils/errorMessages';
  * @param {string} options.mode - Current app mode for context-specific validation
  * @returns {Object} Validation methods and state
  */
-export const useValidation = (options = {}) => {
+interface UseValidationOptions {
+  validateOnChange?: boolean;
+  validateOnBlur?: boolean;
+  mode?: string;
+}
+
+export const useValidation = (options: UseValidationOptions = {}) => {
   const {
     validateOnChange = false,
     validateOnBlur = true,
@@ -188,7 +194,7 @@ export const useValidation = (options = {}) => {
       setIsValidating(false);
     }
 
-    const isValid = Object.values(results).every(result => result.isValid);
+    const isValid = Object.values(results).every((result: { isValid: boolean }) => result.isValid);
 
     return {
       results,
@@ -212,7 +218,13 @@ export const useValidation = (options = {}) => {
    * @param {Object} options - Handler options
    * @returns {Object} Input handlers
    */
-  const createFieldHandlers = useCallback((fieldName, options = {}) => {
+  interface FieldHandlerOptions {
+    validateOnChange?: boolean;
+    validateOnBlur?: boolean;
+    [key: string]: unknown;
+  }
+
+  const createFieldHandlers = useCallback((fieldName: string, options: FieldHandlerOptions = {}) => {
     const {
       validateOnChange: fieldValidateOnChange = validateOnChange,
       validateOnBlur: fieldValidateOnBlur = validateOnBlur,

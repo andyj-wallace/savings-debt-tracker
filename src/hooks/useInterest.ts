@@ -88,34 +88,45 @@ export const useInterest = () => {
         current
       );
 
-      if (result.success && result.data.interestApplied) {
-        setTransactions([...transactions, result.data.transaction]);
-        setLastInterestDate(result.data.newInterestDate);
-        setPendingInterest(0);
-        setDaysPending(0);
+      if (result.success && result.data) {
+        const data = result.data as {
+          interestApplied?: boolean;
+          transaction?: unknown;
+          newInterestDate?: string;
+          amount?: number;
+          days?: number;
+        };
 
-        return {
-          success: true,
-          data: {
-            interestApplied: true,
-            amount: result.data.amount,
-            days: result.data.days,
-            transaction: result.data.transaction
-          }
-        };
-      } else if (result.success && !result.data.interestApplied) {
-        return {
-          success: true,
-          data: {
-            interestApplied: false,
-            message: 'No pending interest to apply'
-          }
-        };
+        if (data.interestApplied) {
+          setTransactions([...transactions, data.transaction]);
+          setLastInterestDate(data.newInterestDate || new Date().toISOString());
+          setPendingInterest(0);
+          setDaysPending(0);
+
+          return {
+            success: true,
+            data: {
+              interestApplied: true,
+              amount: data.amount,
+              days: data.days,
+              transaction: data.transaction
+            }
+          };
+        } else {
+          return {
+            success: true,
+            data: {
+              interestApplied: false,
+              message: 'No pending interest to apply'
+            }
+          };
+        }
       } else {
-        setError(result.error || 'Failed to apply interest charge. Please try again.');
+        const errorMsg = 'error' in result ? result.error : 'Failed to apply interest charge. Please try again.';
+        setError(errorMsg || 'Failed to apply interest charge. Please try again.');
         return {
           success: false,
-          error: result.error
+          error: errorMsg
         };
       }
     } catch (err) {

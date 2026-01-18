@@ -248,7 +248,15 @@ export const validationErrors = {
  * @param {Object} context - Context information for the error
  * @returns {string} Formatted error message
  */
-export const getFormattedErrorMessage = (errorType, context = {}) => {
+interface ErrorContext {
+  fieldName?: string;
+  value?: unknown;
+  min?: number;
+  max?: number;
+  mode?: string;
+}
+
+export const getFormattedErrorMessage = (errorType: string, context: ErrorContext = {}) => {
   const { fieldName, value, min, max, mode } = context;
   const friendlyFieldName = getFriendlyFieldName(fieldName, mode);
 

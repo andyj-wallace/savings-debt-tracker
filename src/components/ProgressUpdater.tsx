@@ -25,7 +25,8 @@ export default function ProgressUpdater() {
   const { detailedStats } = useGoalStats();
 
   const mode = detailedStats.mode;
-  const currentBalance = mode === MODES.DEBT ? detailedStats.debtRemaining : detailedStats.current;
+  const stats = detailedStats as { mode: string; debtRemaining?: number; current: number; remaining: number };
+  const currentBalance = mode === MODES.DEBT ? (stats.debtRemaining ?? stats.remaining) : stats.current;
 
   // Validation hook for transaction form
   const validation = useValidation({
@@ -70,7 +71,8 @@ export default function ProgressUpdater() {
     setAmount(value);
 
     // Clear error when user starts typing
-    if (validation.errors.amount) {
+    const errs = validation.errors as Record<string, string | undefined>;
+    if (errs.amount) {
       validation.clearFieldError('amount');
     }
   };
@@ -80,7 +82,8 @@ export default function ProgressUpdater() {
     setNote(value);
 
     // Clear error when user starts typing
-    if (validation.errors.note) {
+    const errs = validation.errors as Record<string, string | undefined>;
+    if (errs.note) {
       validation.clearFieldError('note');
     }
   };
@@ -104,7 +107,8 @@ export default function ProgressUpdater() {
     validation.clearErrors();
   };
 
-  const hasErrors = validation.errors.amount || validation.errors.note;
+  const validationErrors = validation.errors as Record<string, string | undefined>;
+  const hasErrors = !!(validationErrors.amount || validationErrors.note);
   const amountFieldState = validation.getFieldState('amount');
   const noteFieldState = validation.getFieldState('note');
 
@@ -168,7 +172,7 @@ export default function ProgressUpdater() {
               onBlur={handleNoteBlur}
               placeholder="Add note (optional)"
               className={`w-full ${inputPresets.noteInput(noteInputState)}`}
-              maxLength="200"
+              maxLength={200}
             />
             {noteFieldState.showError && (
               <div className="mt-1 text-sm text-red-600">

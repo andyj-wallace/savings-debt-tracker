@@ -53,11 +53,19 @@ export function formatDateRange(
   const startDateObj = typeof startDate === 'string' ? new Date(startDate) : startDate;
   const endDateObj = typeof endDate === 'string' ? new Date(endDate) : endDate;
 
-  return new Intl.DateTimeFormat(locale, {
+  const formatter = new Intl.DateTimeFormat(locale, {
     month: 'short',
     day: 'numeric',
     year: 'numeric',
-  }).formatRange(startDateObj, endDateObj);
+  });
+
+  // Use formatRange if available, otherwise fall back to manual formatting
+  if ('formatRange' in formatter) {
+    return (formatter as Intl.DateTimeFormat & { formatRange: (start: Date, end: Date) => string }).formatRange(startDateObj, endDateObj);
+  }
+
+  // Fallback for older environments
+  return `${formatter.format(startDateObj)} – ${formatter.format(endDateObj)}`;
 }
 
 export function getRelativeTime(

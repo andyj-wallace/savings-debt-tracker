@@ -14,14 +14,22 @@ export default function StatsPanel() {
   const { pendingInterest, hasPendingInterest } = useInterest();
 
   const mode = detailedStats.mode;
-  const paidOff = mode === 'debt' ? detailedStats.debtPaidOff : detailedStats.current;
-  
+  const stats = detailedStats as {
+    mode: string;
+    current: number;
+    debtPaidOff?: number;
+    progressLabel: string;
+    remainingLabel: string;
+    formattedCurrent?: string;
+  };
+  const paidOff = mode === 'debt' ? (stats.debtPaidOff ?? stats.current) : stats.current;
+
   return (
     <div className="flex flex-col gap-4">
       <StatCard label="Goal" value={formattedGoal} color="text-slate-800" />
       <StatCard
-        label={detailedStats.progressLabel}
-        value={detailedStats.formattedCurrent || `$${paidOff.toFixed(2)}`}
+        label={stats.progressLabel}
+        value={stats.formattedCurrent || `$${paidOff.toFixed(2)}`}
         color={mode === 'savings' ? 'text-green-600' : 'text-red-600'}
       />
       {mode === 'debt' && hasPendingInterest && (
@@ -32,7 +40,7 @@ export default function StatsPanel() {
         />
       )}
       <StatCard
-        label={detailedStats.remainingLabel}
+        label={stats.remainingLabel}
         value={formattedRemaining}
         color="text-slate-800"
       />

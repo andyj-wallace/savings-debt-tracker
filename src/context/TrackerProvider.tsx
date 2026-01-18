@@ -107,13 +107,21 @@ export const TrackerProvider = ({ children }) => {
         current
       );
 
-      if (result.success && result.data.interestApplied) {
-        setTransactions([...transactions, result.data.transaction]);
-        setLastInterestDate(result.data.newInterestDate);
-        setPendingInterest(0);
-        setDaysPending(0);
+      if (result.success && result.data) {
+        const data = result.data as {
+          interestApplied?: boolean;
+          transaction?: unknown;
+          newInterestDate?: string;
+        };
+        if (data.interestApplied && data.transaction) {
+          setTransactions([...transactions, data.transaction]);
+          setLastInterestDate(data.newInterestDate || new Date().toISOString());
+          setPendingInterest(0);
+          setDaysPending(0);
+        }
       } else if (!result.success) {
-        console.error('Apply interest charge error:', result.error);
+        const errorMsg = 'error' in result ? result.error : 'Failed to apply interest charge. Please try again.';
+        console.error('Apply interest charge error:', errorMsg);
         setError('Failed to apply interest charge. Please try again.');
       }
     } catch (err) {
@@ -164,11 +172,12 @@ export const TrackerProvider = ({ children }) => {
         remaining
       );
 
-      if (result.success) {
-        setTransactions(result.data.transactions);
+      if (result.success && result.data) {
+        const data = result.data as { transactions: unknown[]; addedInterest: boolean };
+        setTransactions(data.transactions);
 
         // Update last interest date if interest was added
-        if (result.data.addedInterest) {
+        if (data.addedInterest) {
           setLastInterestDate(new Date().toISOString());
         }
 
@@ -180,8 +189,9 @@ export const TrackerProvider = ({ children }) => {
 
         setHasUnsavedChanges(false);
       } else {
-        console.error('Add transaction error:', result.error);
-        setError(result.error || 'Failed to add transaction. Please try again.');
+        const errorMsg = 'error' in result ? result.error : 'Failed to add transaction. Please try again.';
+        console.error('Add transaction error:', errorMsg);
+        setError(errorMsg || 'Failed to add transaction. Please try again.');
       }
     } catch (err) {
       console.error('Error adding transaction:', err);
@@ -271,6 +281,8 @@ export const TrackerProvider = ({ children }) => {
     setTransactions,
     setInterestRate,
     setLastInterestDate,
+    setPendingInterest,
+    setDaysPending,
 
     // Business logic functions
     handleModeChange,
@@ -295,6 +307,7 @@ export const TrackerProvider = ({ children }) => {
     current, remaining, percentage, pendingInterest, daysPending,
     // Setters
     setMode, setGoal, setTransactions, setInterestRate, setLastInterestDate,
+    setPendingInterest, setDaysPending,
     // Handlers
     handleModeChange, handleAddTransaction, handleDeleteTransaction, handleReset, applyInterestCharge,
     // Utility state

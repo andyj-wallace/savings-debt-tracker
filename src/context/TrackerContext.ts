@@ -30,22 +30,29 @@ export const initialTrackerState = {
   daysPending: 0,
 
   // State update functions
-  setMode: () => {},
-  setGoal: () => {},
-  setTransactions: () => {},
-  setInterestRate: () => {},
-  setLastInterestDate: () => {},
+  setMode: (_mode: string) => {},
+  setGoal: (_goal: number) => {},
+  setTransactions: (_transactions: unknown[]) => {},
+  setInterestRate: (_rate: number) => {},
+  setLastInterestDate: (_date: string | null) => {},
+
+  // Additional state setters
+  setPendingInterest: (_interest: number) => {},
+  setDaysPending: (_days: number) => {},
+  setError: (_error: string | null) => {},
+  setHasUnsavedChanges: (_hasChanges: boolean) => {},
 
   // Business logic functions
-  handleModeChange: () => {},
-  handleAddTransaction: () => {},
-  handleDeleteTransaction: () => {},
+  handleModeChange: (_newMode: string) => {},
+  handleAddTransaction: (_amount: number, _note: string) => {},
+  handleDeleteTransaction: (_id: number) => {},
   handleReset: () => {},
   applyInterestCharge: () => {},
+  setIsLoading: (_loading: boolean) => {},
 
   // Utility flags
   isLoading: false,
-  error: null,
+  error: null as string | null,
   hasUnsavedChanges: false
 };
 

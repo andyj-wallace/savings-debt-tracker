@@ -238,7 +238,14 @@ export const createInputLayout = ({
     finalLabelStyle = 'optional';
   }
 
-  const layout = {
+  const layout: {
+    wrapper: string;
+    label: string;
+    input: string;
+    helperText: string;
+    inputWrapper?: string;
+    icon?: string;
+  } = {
     wrapper: inputWrapper[wrapperStyle] || inputWrapper.base,
     label: inputLabel[finalLabelStyle] || inputLabel.base,
     input: getInputClasses(variant, size, state, type, mode),

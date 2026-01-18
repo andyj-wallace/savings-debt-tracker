@@ -77,15 +77,18 @@ export const modeButtonVariants = {
   },
   modeSecondary: (mode) => {
     const colors = getModeColors(mode);
+    const borderColor = mode === 'savings' ? 'border-green-500' : 'border-red-500';
+    const hoverBg = mode === 'savings' ? 'hover:bg-green-50' : 'hover:bg-red-50';
     return {
-      base: `border ${colors.BORDER} ${colors.TEXT} hover:${colors.BG_LIGHT} focus:ring-${mode === 'savings' ? 'green' : 'red'}-500`,
+      base: `border ${borderColor} ${colors.TEXT} ${hoverBg} focus:ring-${mode === 'savings' ? 'green' : 'red'}-500`,
       disabled: 'border-slate-200 bg-slate-50 text-slate-400'
     };
   },
   modeOutline: (mode) => {
     const colors = getModeColors(mode);
+    const borderColor = mode === 'savings' ? 'border-green-500' : 'border-red-500';
     return {
-      base: `border-2 ${colors.BORDER} ${colors.TEXT} hover:${colors.PRIMARY} hover:text-white focus:ring-${mode === 'savings' ? 'green' : 'red'}-500`,
+      base: `border-2 ${borderColor} ${colors.TEXT} hover:${colors.PRIMARY} hover:text-white focus:ring-${mode === 'savings' ? 'green' : 'red'}-500`,
       disabled: 'border-slate-200 text-slate-400'
     };
   }

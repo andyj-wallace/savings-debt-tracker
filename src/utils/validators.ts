@@ -12,11 +12,42 @@ import { DEFAULTS } from '../constants';
 
 /**
  * Validation result structure
- * @typedef {Object} ValidationResult
- * @property {boolean} isValid - Whether the input passes validation
- * @property {string|null} error - Error message if validation fails
- * @property {*} value - The processed/cleaned value if valid
  */
+export interface ValidationResult<T = unknown> {
+  isValid: boolean;
+  error: string | null;
+  value: T | null;
+}
+
+/**
+ * Options for amount validation
+ */
+interface AmountValidationOptions {
+  allowZero?: boolean;
+  fieldName?: string;
+}
+
+/**
+ * Options for goal validation
+ */
+interface GoalValidationOptions {
+  fieldName?: string;
+}
+
+/**
+ * Options for interest rate validation
+ */
+interface InterestRateValidationOptions {
+  fieldName?: string;
+}
+
+/**
+ * Options for note validation
+ */
+interface NoteValidationOptions {
+  required?: boolean;
+  fieldName?: string;
+}
 
 /**
  * Validation limits and constraints
@@ -72,7 +103,7 @@ const roundToDecimals = (num, decimals) => {
  * @param {string} options.fieldName - Name of the field for error messages
  * @returns {ValidationResult} Validation result
  */
-export const validateAmount = (value, options = {}) => {
+export const validateAmount = (value: unknown, options: AmountValidationOptions = {}): ValidationResult<number> => {
   const { allowZero = false, fieldName = 'Amount' } = options;
 
   // Check if value exists
@@ -148,7 +179,7 @@ export const validateAmount = (value, options = {}) => {
  * @param {string} options.fieldName - Name of the field for error messages
  * @returns {ValidationResult} Validation result
  */
-export const validateGoal = (value, options = {}) => {
+export const validateGoal = (value: unknown, options: GoalValidationOptions = {}): ValidationResult<number> => {
   const { fieldName = 'Goal' } = options;
 
   // Check if value exists
@@ -206,7 +237,7 @@ export const validateGoal = (value, options = {}) => {
  * @param {string} options.fieldName - Name of the field for error messages
  * @returns {ValidationResult} Validation result
  */
-export const validateInterestRate = (value, options = {}) => {
+export const validateInterestRate = (value: unknown, options: InterestRateValidationOptions = {}): ValidationResult<number> => {
   const { fieldName = 'Interest rate' } = options;
 
   // Check if value exists
@@ -265,7 +296,7 @@ export const validateInterestRate = (value, options = {}) => {
  * @param {string} options.fieldName - Name of the field for error messages
  * @returns {ValidationResult} Validation result
  */
-export const validateNote = (value, options = {}) => {
+export const validateNote = (value: unknown, options: NoteValidationOptions = {}): ValidationResult<string> => {
   const { required = false, fieldName = 'Note' } = options;
 
   // Handle empty values
@@ -368,8 +399,11 @@ export const validateTransaction = (transaction, mode) => {
  * @param {Object} validators - Object with field names as keys and validator functions
  * @returns {Object} Object with validation results for each field
  */
-export const validateFields = (fields, validators) => {
-  const results = {};
+export const validateFields = (
+  fields: Record<string, unknown>,
+  validators: Record<string, (value: unknown) => ValidationResult>
+) => {
+  const results: Record<string, ValidationResult> = {};
   let hasErrors = false;
 
   for (const [fieldName, value] of Object.entries(fields)) {

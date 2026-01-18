@@ -78,7 +78,15 @@ export class TransactionService {
       const newRunningTotal = currentTotal + transactionAmount;
 
       // Create transaction object
-      const transaction = {
+      const transaction: {
+        id: number;
+        amount: number;
+        date: string;
+        note: string;
+        type: string;
+        runningTotal: number;
+        days?: number;
+      } = {
         id: Date.now() + (type === 'interest' ? 0 : 1), // Ensure unique IDs
         amount: transactionAmount,
         date: new Date().toISOString(),

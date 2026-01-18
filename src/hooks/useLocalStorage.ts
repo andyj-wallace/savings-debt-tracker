@@ -22,7 +22,12 @@ const getStorageAdapter = () => {
  * @param {Object} options - Hook options
  * @returns {Array} [value, setValue, error]
  */
-export function useLocalStorage(key, initialValue, options = {}) {
+interface UseLocalStorageOptions {
+  onError?: ((error: Error) => void) | null;
+  retryAttempts?: number;
+}
+
+export function useLocalStorage<T>(key: string, initialValue: T, options: UseLocalStorageOptions = {}) {
   const {
     onError = null,
     retryAttempts = 3

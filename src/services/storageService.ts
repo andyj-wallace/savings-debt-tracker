@@ -28,7 +28,9 @@ export const STORAGE_SERVICE_ERROR_CODES = {
  * Provides type-safe, validated storage operations
  */
 export class StorageService {
-  constructor(storageAdapter = null) {
+  private adapter: LocalStorageAdapter;
+
+  constructor(storageAdapter: LocalStorageAdapter | null = null) {
     this.adapter = storageAdapter || new LocalStorageAdapter();
   }
 

@@ -384,7 +384,32 @@ export const getAccessibleColors = (backgroundColor, backgroundShade) => {
  * @param {Object} options - Customization options
  * @returns {Object} Complete color scheme for component
  */
-export const createColorScheme = (baseColor, options = {}) => {
+interface ColorSchemeOptions {
+  intensity?: number;
+  includeHover?: boolean;
+  includeFocus?: boolean;
+  includeDisabled?: boolean;
+}
+
+interface ColorSet {
+  bg: string;
+  text: string;
+  border: string;
+}
+
+interface ColorScheme {
+  bg: string;
+  text: string;
+  border: string;
+  hover?: ColorSet;
+  focus?: {
+    ring: string;
+    border: string;
+  };
+  disabled?: ColorSet;
+}
+
+export const createColorScheme = (baseColor: string, options: ColorSchemeOptions = {}): ColorScheme => {
   const {
     intensity = 500,
     includeHover = true,
@@ -392,7 +417,7 @@ export const createColorScheme = (baseColor, options = {}) => {
     includeDisabled = true
   } = options;
 
-  const scheme = {
+  const scheme: ColorScheme = {
     bg: colorPalette[baseColor]?.[intensity] || colorPalette.slate[intensity],
     text: textColorPalette[baseColor]?.[intensity] || textColorPalette.slate[intensity],
     border: borderColorPalette[baseColor]?.[intensity] || borderColorPalette.slate[intensity]

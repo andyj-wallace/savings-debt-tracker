@@ -15,6 +15,8 @@ import { StorageAdapter, STORAGE_ERROR_CODES } from './StorageAdapter';
  * Implements the StorageAdapter interface using browser localStorage
  */
 export class LocalStorageAdapter extends StorageAdapter {
+  private storage: Storage | null;
+
   constructor() {
     super();
     this.storage = typeof window !== 'undefined' ? window.localStorage : null;
