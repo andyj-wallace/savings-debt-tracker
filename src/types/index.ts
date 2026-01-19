@@ -26,9 +26,11 @@ export interface Transaction {
   /** ISO 8601 date string when transaction was created */
   date: string;
   /** Type of transaction */
-  type: 'deposit' | 'payment' | 'interest';
-  /** Current balance after this transaction */
-  balanceAfter?: number;
+  type: 'transaction' | 'interest';
+  /** Running total after this transaction */
+  runningTotal: number;
+  /** Number of days (for interest transactions) */
+  days?: number;
 }
 
 /**

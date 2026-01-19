@@ -7,6 +7,7 @@
 
 import CalculationService from '../CalculationService';
 import { MODES } from '../../constants';
+import type { Transaction } from '../../types';
 
 describe('CalculationService', () => {
 
@@ -15,16 +16,16 @@ describe('CalculationService', () => {
       const result = CalculationService.calculateProgress(MODES.SAVINGS, 750, 1000);
 
       expect(result.success).toBe(true);
-      expect(result.data.percentage).toBe(75);
-      expect(result.data.remaining).toBe(250);
+      expect(result.data?.percentage).toBe(75);
+      expect(result.data?.remaining).toBe(250);
     });
 
     test('should cap savings progress at 100%', () => {
       const result = CalculationService.calculateProgress(MODES.SAVINGS, 1200, 1000);
 
       expect(result.success).toBe(true);
-      expect(result.data.percentage).toBe(100);
-      expect(result.data.remaining).toBe(0);
+      expect(result.data?.percentage).toBe(100);
+      expect(result.data?.remaining).toBe(0);
     });
 
     test('should calculate debt progress correctly', () => {
@@ -32,8 +33,8 @@ describe('CalculationService', () => {
       const result = CalculationService.calculateProgress(MODES.DEBT, -2000, 5000);
 
       expect(result.success).toBe(true);
-      expect(result.data.percentage).toBe(40); // 40% paid off
-      expect(result.data.remaining).toBe(3000); // $3000 remaining
+      expect(result.data?.percentage).toBe(40); // 40% paid off
+      expect(result.data?.remaining).toBe(3000); // $3000 remaining
     });
 
     test('should handle debt fully paid off', () => {
@@ -41,12 +42,12 @@ describe('CalculationService', () => {
       const result = CalculationService.calculateProgress(MODES.DEBT, -5000, 5000);
 
       expect(result.success).toBe(true);
-      expect(result.data.percentage).toBe(100);
-      expect(result.data.remaining).toBe(0);
+      expect(result.data?.percentage).toBe(100);
+      expect(result.data?.remaining).toBe(0);
     });
 
     test('should fail with invalid mode', () => {
-      const result = CalculationService.calculateProgress('invalid', 500, 1000);
+      const result = CalculationService.calculateProgress('invalid' as any, 500, 1000);
 
       expect(result.success).toBe(false);
       expect(result.errorCode).toBe('INVALID_MODE');
@@ -72,8 +73,8 @@ describe('CalculationService', () => {
       const result = CalculationService.calculateSavingsProgress(300, 1000);
 
       expect(result.success).toBe(true);
-      expect(result.data.percentage).toBe(30);
-      expect(result.data.remaining).toBe(700);
+      expect(result.data?.percentage).toBe(30);
+      expect(result.data?.remaining).toBe(700);
     });
   });
 
@@ -82,8 +83,8 @@ describe('CalculationService', () => {
       const result = CalculationService.calculateDebtProgress(-1500, 3000);
 
       expect(result.success).toBe(true);
-      expect(result.data.percentage).toBe(50);
-      expect(result.data.remaining).toBe(1500);
+      expect(result.data?.percentage).toBe(50);
+      expect(result.data?.remaining).toBe(1500);
     });
   });
 
@@ -112,14 +113,14 @@ describe('CalculationService', () => {
 
   describe('calculateTotalFromTransactions', () => {
     test('should calculate total from valid transactions', () => {
-      const transactions = [
+      const transactions: Partial<Transaction>[] = [
         { amount: 100 },
         { amount: 50 },
         { amount: -25 },
         { amount: 75 }
       ];
 
-      const result = CalculationService.calculateTotalFromTransactions(transactions);
+      const result = CalculationService.calculateTotalFromTransactions(transactions as Transaction[]);
 
       expect(result.success).toBe(true);
       expect(result.data).toBe(200);
@@ -139,7 +140,7 @@ describe('CalculationService', () => {
         { amount: 50 },
         null,
         { amount: 25 }
-      ];
+      ] as any[];
 
       const result = CalculationService.calculateTotalFromTransactions(transactions);
 
@@ -148,7 +149,7 @@ describe('CalculationService', () => {
     });
 
     test('should fail with non-array input', () => {
-      const result = CalculationService.calculateTotalFromTransactions('not an array');
+      const result = CalculationService.calculateTotalFromTransactions('not an array' as any);
 
       expect(result.success).toBe(false);
       expect(result.errorCode).toBe('CALCULATION_ERROR');
@@ -223,7 +224,7 @@ describe('CalculationService', () => {
     });
 
     test('should handle non-numeric input', () => {
-      const result = CalculationService.formatCurrency('invalid');
+      const result = CalculationService.formatCurrency('invalid' as any);
       expect(result).toBe('$0.00');
     });
   });

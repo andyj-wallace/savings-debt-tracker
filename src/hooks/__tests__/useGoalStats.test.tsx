@@ -5,18 +5,34 @@
  * Tests goal statistics calculations, progress tracking, and hook behavior.
  */
 
+import React, { ReactNode } from 'react';
 import { renderHook, waitFor } from '@testing-library/react';
 import { useGoalStats } from '../useGoalStats';
 import { TrackerContext } from '../../context/TrackerContext';
 import { TrackerProvider } from '../../context/TrackerProvider';
+import type { Transaction, Mode } from '../../types';
+
+interface MockContextValue {
+  mode: Mode;
+  goal: number;
+  current: number;
+  transactions: Transaction[];
+  pendingInterest?: number;
+  remaining?: number;
+  percentage?: number;
+}
+
+interface WrapperProps {
+  children: ReactNode;
+}
 
 /**
  * Creates a mock context provider wrapper for testing
- * @param {Object} contextValue - The context values to provide
- * @returns {Function} Wrapper component for renderHook
+ * @param contextValue - The context values to provide
+ * @returns Wrapper component for renderHook
  */
-const createMockWrapper = (contextValue) => {
-  const defaultContext = {
+const createMockWrapper = (contextValue: Partial<MockContextValue>) => {
+  const defaultContext: MockContextValue = {
     mode: 'savings',
     goal: 1000,
     current: 0,
@@ -28,9 +44,9 @@ const createMockWrapper = (contextValue) => {
 
   const mergedContext = { ...defaultContext, ...contextValue };
 
-  return function MockWrapper({ children }) {
+  return function MockWrapper({ children }: WrapperProps): React.ReactElement {
     return (
-      <TrackerContext.Provider value={mergedContext}>
+      <TrackerContext.Provider value={mergedContext as any}>
         {children}
       </TrackerContext.Provider>
     );
@@ -48,8 +64,8 @@ describe('useGoalStats', () => {
       goal: 1000,
       current: 250,
       transactions: [
-        { id: 1, amount: 100, type: 'transaction' },
-        { id: 2, amount: 150, type: 'transaction' }
+        { id: '1', amount: 100, type: 'transaction', date: new Date().toISOString(), note: 'Test', runningTotal: 100 },
+        { id: '2', amount: 150, type: 'transaction', date: new Date().toISOString(), note: 'Test', runningTotal: 250 }
       ]
     });
 
@@ -67,7 +83,7 @@ describe('useGoalStats', () => {
       goal: 5000,
       current: -2000, // $2000 paid off
       transactions: [
-        { id: 1, amount: -2000, type: 'transaction' }
+        { id: '1', amount: -2000, type: 'transaction', date: new Date().toISOString(), note: 'Payment', runningTotal: -2000 }
       ]
     });
 
@@ -84,7 +100,7 @@ describe('useGoalStats', () => {
       goal: 1000,
       current: 1000,
       transactions: [
-        { id: 1, amount: 1000, type: 'transaction' }
+        { id: '1', amount: 1000, type: 'transaction', date: new Date().toISOString(), note: 'Deposit', runningTotal: 1000 }
       ]
     });
 
@@ -102,19 +118,20 @@ describe('useGoalStats', () => {
       goal: 2000,
       current: 600,
       transactions: [
-        { id: 1, amount: 300, type: 'transaction' },
-        { id: 2, amount: 300, type: 'transaction' }
+        { id: '1', amount: 300, type: 'transaction', date: new Date().toISOString(), note: 'Deposit', runningTotal: 300 },
+        { id: '2', amount: 300, type: 'transaction', date: new Date().toISOString(), note: 'Deposit', runningTotal: 600 }
       ]
     });
 
     const { result } = renderHook(() => useGoalStats(), { wrapper });
 
-    expect(result.current.detailedStats.mode).toBe('savings');
-    expect(result.current.detailedStats.saved).toBe(600);
-    expect(result.current.detailedStats.stillNeeded).toBe(1400);
-    expect(result.current.detailedStats.progressLabel).toBe('Saved');
-    expect(result.current.detailedStats.remainingLabel).toBe('Still Needed');
-    expect(result.current.detailedStats.isPositiveProgress).toBe(true);
+    const stats = result.current.detailedStats as any;
+    expect(stats.mode).toBe('savings');
+    expect(stats.saved).toBe(600);
+    expect(stats.stillNeeded).toBe(1400);
+    expect(stats.progressLabel).toBe('Saved');
+    expect(stats.remainingLabel).toBe('Still Needed');
+    expect(stats.isPositiveProgress).toBe(true);
   });
 
   test('should provide detailed statistics for debt mode', () => {
@@ -124,20 +141,21 @@ describe('useGoalStats', () => {
       current: -3000, // $3000 paid
       pendingInterest: 25,
       transactions: [
-        { id: 1, amount: -3000, type: 'transaction' }
+        { id: '1', amount: -3000, type: 'transaction', date: new Date().toISOString(), note: 'Payment', runningTotal: -3000 }
       ]
     });
 
     const { result } = renderHook(() => useGoalStats(), { wrapper });
 
-    expect(result.current.detailedStats.mode).toBe('debt');
-    expect(result.current.detailedStats.originalDebt).toBe(8000);
-    expect(result.current.detailedStats.totalPaid).toBe(3000);
-    expect(result.current.detailedStats.debtPaidOff).toBe(3000);
-    expect(result.current.detailedStats.debtRemaining).toBe(5000);
-    expect(result.current.detailedStats.progressLabel).toBe('Paid Off');
-    expect(result.current.detailedStats.remainingLabel).toBe('Debt Remaining');
-    expect(result.current.detailedStats.pendingInterest).toBe(25);
+    const stats = result.current.detailedStats as any;
+    expect(stats.mode).toBe('debt');
+    expect(stats.originalDebt).toBe(8000);
+    expect(stats.totalPaid).toBe(3000);
+    expect(stats.debtPaidOff).toBe(3000);
+    expect(stats.debtRemaining).toBe(5000);
+    expect(stats.progressLabel).toBe('Paid Off');
+    expect(stats.remainingLabel).toBe('Debt Remaining');
+    expect(stats.pendingInterest).toBe(25);
   });
 
   test('should calculate progress milestones', () => {
@@ -146,7 +164,7 @@ describe('useGoalStats', () => {
       goal: 1000,
       current: 300,
       transactions: [
-        { id: 1, amount: 300, type: 'transaction' }
+        { id: '1', amount: 300, type: 'transaction', date: new Date().toISOString(), note: 'Deposit', runningTotal: 300 }
       ]
     });
 
@@ -177,7 +195,7 @@ describe('useGoalStats', () => {
       goal: 1500,
       current: 375,
       transactions: [
-        { id: 1, amount: 375, type: 'transaction' }
+        { id: '1', amount: 375, type: 'transaction', date: new Date().toISOString(), note: 'Deposit', runningTotal: 375 }
       ]
     });
 
@@ -195,7 +213,7 @@ describe('useGoalStats', () => {
       goal: 1200,
       current: 200,
       transactions: [
-        { id: 1, amount: 200, type: 'transaction' }
+        { id: '1', amount: 200, type: 'transaction', date: new Date().toISOString(), note: 'Deposit', runningTotal: 200 }
       ]
     });
 
@@ -231,7 +249,7 @@ describe('useGoalStats integration', () => {
   });
 
   test('should work with TrackerProvider', async () => {
-    const wrapper = ({ children }) => (
+    const wrapper = ({ children }: WrapperProps) => (
       <TrackerProvider>{children}</TrackerProvider>
     );
 
