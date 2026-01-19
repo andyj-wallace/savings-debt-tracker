@@ -8,16 +8,50 @@
  * @fileoverview Main application error boundary implementation
  */
 
-import React from 'react';
+import React, { ReactNode, ErrorInfo, ComponentType } from 'react';
 import { AlertTriangle, RefreshCw, Home } from 'lucide-react';
 import { CSS_CLASSES } from '../constants';
+
+/**
+ * Props for custom fallback components
+ */
+export interface FallbackComponentProps {
+  error: Error | null;
+  resetError: () => void;
+  refreshPage: () => void;
+}
+
+/**
+ * Props for the ErrorBoundary component
+ */
+export interface ErrorBoundaryProps {
+  children: ReactNode;
+  fallbackComponent?: ComponentType<FallbackComponentProps>;
+  showErrorDetails?: boolean;
+  onError?: (error: Error, errorInfo: ErrorInfo) => void;
+}
+
+/**
+ * State for the ErrorBoundary component
+ */
+export interface ErrorBoundaryState {
+  hasError: boolean;
+  error: Error | null;
+  errorInfo: ErrorInfo | null;
+  errorId: number | null;
+}
+
+/**
+ * Error severity levels
+ */
+export type ErrorSeverity = 'high' | 'medium' | 'low';
 
 /**
  * ErrorBoundary Class Component
  * Catches errors in child components and displays fallback UI
  */
-class ErrorBoundary extends React.Component<any, any> {
-  constructor(props: any) {
+class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
+  constructor(props: ErrorBoundaryProps) {
     super(props);
     this.state = {
       hasError: false,
@@ -29,10 +63,8 @@ class ErrorBoundary extends React.Component<any, any> {
 
   /**
    * Static method to update state when an error occurs
-   * @param {Error} error - The error that was thrown
-   * @returns {Object} New state object
    */
-  static getDerivedStateFromError(error) {
+  static getDerivedStateFromError(error: Error): Partial<ErrorBoundaryState> {
     // Update state so the next render will show the fallback UI
     return {
       hasError: true,
@@ -43,10 +75,8 @@ class ErrorBoundary extends React.Component<any, any> {
 
   /**
    * Component lifecycle method called when an error occurs
-   * @param {Error} error - The error that was thrown
-   * @param {Object} errorInfo - Information about the error
    */
-  componentDidCatch(error, errorInfo) {
+  componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
     // Log error details for debugging
     console.error('ErrorBoundary caught an error:', error);
     console.error('Error info:', errorInfo);
@@ -57,6 +87,11 @@ class ErrorBoundary extends React.Component<any, any> {
       errorInfo
     });
 
+    // Call optional onError callback
+    if (this.props.onError) {
+      this.props.onError(error, errorInfo);
+    }
+
     // Log to external service in production (placeholder for future implementation)
     if (process.env.NODE_ENV === 'production') {
       // Future: Send to error logging service
@@ -66,10 +101,8 @@ class ErrorBoundary extends React.Component<any, any> {
 
   /**
    * Placeholder for future error logging service integration
-   * @param {Error} error - The error that was thrown
-   * @param {Object} errorInfo - Information about the error
    */
-  logErrorToService(error, errorInfo) {
+  logErrorToService(error: Error, errorInfo: ErrorInfo): void {
     // Future implementation: send to logging service
     console.log('Would log to service:', { error, errorInfo });
   }
@@ -112,10 +145,8 @@ class ErrorBoundary extends React.Component<any, any> {
 
   /**
    * Get user-friendly error message based on error type
-   * @param {Error} error - The error that occurred
-   * @returns {string} User-friendly error message
    */
-  getUserFriendlyMessage(error) {
+  getUserFriendlyMessage(error: Error | null): string {
     const errorMessage = error?.message?.toLowerCase() || '';
 
     // Storage quota exceeded
@@ -139,10 +170,8 @@ class ErrorBoundary extends React.Component<any, any> {
 
   /**
    * Get error severity level
-   * @param {Error} error - The error that occurred
-   * @returns {string} Severity level: 'high', 'medium', 'low'
    */
-  getErrorSeverity(error) {
+  getErrorSeverity(error: Error | null): ErrorSeverity {
     const errorMessage = error?.message?.toLowerCase() || '';
 
     // High severity: data loss risk
@@ -159,7 +188,7 @@ class ErrorBoundary extends React.Component<any, any> {
     return 'low';
   }
 
-  render() {
+  render(): ReactNode {
     if (this.state.hasError) {
       const { error } = this.state;
       const { fallbackComponent: FallbackComponent, showErrorDetails = false } = this.props;

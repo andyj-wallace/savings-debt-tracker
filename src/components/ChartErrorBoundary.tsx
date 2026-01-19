@@ -8,15 +8,36 @@
  * @fileoverview Chart-specific error boundary implementation
  */
 
-import React from 'react';
+import React, { ReactNode, ErrorInfo } from 'react';
 import { BarChart3, AlertTriangle, RefreshCw } from 'lucide-react';
+
+/**
+ * Props for the ChartErrorBoundary component
+ */
+export interface ChartErrorBoundaryProps {
+  children: ReactNode;
+  chartType?: string;
+  title?: string;
+  showFallbackChart?: boolean;
+  data?: unknown[];
+  onError?: (error: Error, errorInfo: ErrorInfo) => void;
+}
+
+/**
+ * State for the ChartErrorBoundary component
+ */
+export interface ChartErrorBoundaryState {
+  hasError: boolean;
+  error: Error | null;
+  retryCount: number;
+}
 
 /**
  * ChartErrorBoundary Class Component
  * Specialized error boundary for chart components
  */
-class ChartErrorBoundary extends React.Component<any, any> {
-  constructor(props: any) {
+class ChartErrorBoundary extends React.Component<ChartErrorBoundaryProps, ChartErrorBoundaryState> {
+  constructor(props: ChartErrorBoundaryProps) {
     super(props);
     this.state = {
       hasError: false,
@@ -27,10 +48,8 @@ class ChartErrorBoundary extends React.Component<any, any> {
 
   /**
    * Static method to update state when an error occurs
-   * @param {Error} error - The error that was thrown
-   * @returns {Object} New state object
    */
-  static getDerivedStateFromError(error) {
+  static getDerivedStateFromError(error: Error): Partial<ChartErrorBoundaryState> {
     return {
       hasError: true,
       error
@@ -39,23 +58,24 @@ class ChartErrorBoundary extends React.Component<any, any> {
 
   /**
    * Component lifecycle method called when an error occurs
-   * @param {Error} error - The error that was thrown
-   * @param {Object} errorInfo - Information about the error
    */
-  componentDidCatch(error, errorInfo) {
+  componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
     console.warn('ChartErrorBoundary caught a chart error:', error);
     console.warn('Chart error info:', errorInfo);
 
     // Log chart-specific error details
     this.logChartError(error, errorInfo);
+
+    // Call optional onError callback
+    if (this.props.onError) {
+      this.props.onError(error, errorInfo);
+    }
   }
 
   /**
    * Log chart-specific error information
-   * @param {Error} error - The error that was thrown
-   * @param {Object} errorInfo - Information about the error
    */
-  logChartError(error, errorInfo) {
+  logChartError(error: Error, errorInfo: ErrorInfo): void {
     const chartErrorData = {
       error: error.message,
       stack: error.stack,
@@ -87,10 +107,8 @@ class ChartErrorBoundary extends React.Component<any, any> {
 
   /**
    * Get chart-specific error message
-   * @param {Error} error - The error that occurred
-   * @returns {string} Chart-specific error message
    */
-  getChartErrorMessage(error) {
+  getChartErrorMessage(error: Error | null): string {
     const errorMessage = error?.message?.toLowerCase() || '';
 
     // Canvas/rendering errors
@@ -119,10 +137,8 @@ class ChartErrorBoundary extends React.Component<any, any> {
 
   /**
    * Determine if retry should be available based on error type and retry count
-   * @param {Error} error - The error that occurred
-   * @returns {boolean} Whether retry option should be shown
    */
-  shouldShowRetry(error) {
+  shouldShowRetry(error: Error | null): boolean {
     const errorMessage = error?.message?.toLowerCase() || '';
     const maxRetries = 3;
 
@@ -135,7 +151,7 @@ class ChartErrorBoundary extends React.Component<any, any> {
     return this.state.retryCount < maxRetries;
   }
 
-  render() {
+  render(): ReactNode {
     if (this.state.hasError) {
       const { error } = this.state;
       const { chartType = 'Chart', showFallbackChart = true } = this.props;

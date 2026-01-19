@@ -104,15 +104,16 @@ The application currently uses a **Component-Based Architecture with Prop Drilli
 - ~~Story 2.3: Custom Hooks - Transaction & Interest Logic~~ ✅ (8 points)
 - **Total**: 34/34 points ✅ | **Status**: All Sprint 2 stories complete!
 
-**Sprint 3: Quality & Polish** ⏳ **PENDING**
-- Story 3.1: Error Boundaries (5 points)
+**Sprint 3: Quality & Polish** ⏳ **IN PROGRESS**
+- ~~Story 3.1: Error Boundaries~~ ✅ (5 points)
+- Story 3.1.1: Fix Failing Unit Tests (2 points)
 - Story 3.2: Separate Styles (5 points)
 - Story 3.3: Environment Configuration (3 points)
 - Story 3.4: TypeScript Migration (13 points)
 - Story 3.5: Comprehensive Testing (21 points)
-- **Total**: 0/47 points | **Status**: Awaiting Sprint 2 completion
+- **Total**: 5/47 points | **Status**: Sprint 3 in progress
 
-**🏆 Overall Progress: 50/97 points complete (52%)**
+**🏆 Overall Progress: 55/99 points complete (56%)**
 
 ---
 
@@ -503,54 +504,111 @@ Add production-ready features including error boundaries, TypeScript migration, 
 
 ---
 
-### Story 3.1: Error Boundaries
+### ~~Story 3.1: Error Boundaries~~ ✅
 
 **TODO Reference:** #7 - Error Boundaries
 
-**Owner:** Mid-level Dev  
-**Effort:** 5 points  
-**Dependencies:** Story 2.1 (context for global error state)  
+**Owner:** Mid-level Dev
+**Effort:** 5 points
+**Dependencies:** Story 2.1 (context for global error state)
 **Risk:** Low
 
 **Description:**
 Implement React Error Boundaries to gracefully handle runtime errors and prevent full application crashes. This provides better user experience when unexpected errors occur.
 
 **Tasks:**
-- Create ErrorBoundary class component with error catching
-- Implement getDerivedStateFromError lifecycle method
-- Implement componentDidCatch with error logging
-- Design user-friendly error fallback UI
-- Add refresh page functionality in error state
-- Create ChartErrorBoundary for chart-specific errors
-- Add error boundary around Chart component
-- Add error boundary around TransactionHistory
-- Add error boundary around ThermometerDisplay
-- Add top-level error boundary wrapping entire app
-- Implement specific handling for quota exceeded errors
-- Implement specific handling for network errors
-- Add error logging to console for development
-- Prepare hooks for future error logging service integration
-- Write unit tests for error boundary behavior
-- Test error recovery scenarios
+- ~~Create ErrorBoundary class component with error catching~~ ✅
+- ~~Implement getDerivedStateFromError lifecycle method~~ ✅
+- ~~Implement componentDidCatch with error logging~~ ✅
+- ~~Design user-friendly error fallback UI~~ ✅
+- ~~Add refresh page functionality in error state~~ ✅
+- ~~Create ChartErrorBoundary for chart-specific errors~~ ✅
+- ~~Add error boundary around Chart component~~ ✅
+- ~~Add error boundary around TransactionHistory~~ ✅
+- ~~Add error boundary around ThermometerDisplay~~ ✅
+- ~~Add top-level error boundary wrapping entire app~~ ✅
+- ~~Implement specific handling for quota exceeded errors~~ ✅
+- ~~Implement specific handling for network errors~~ ✅
+- ~~Add error logging to console for development~~ ✅
+- ~~Prepare hooks for future error logging service integration~~ ✅
+- ~~Write unit tests for error boundary behavior~~ ✅
+- ~~Test error recovery scenarios~~ ✅
 - Document error boundary usage patterns
 
 **Acceptance Criteria:**
-- Application never crashes completely from runtime errors
-- User sees friendly error messages instead of blank screen
-- Specific fallback UI for different error types
-- Errors properly logged for debugging
-- localStorage quota errors handled with clear messaging
-- Error boundaries around all critical UI sections
-- Refresh functionality allows user recovery
-- Error state properly resets on recovery
+- ✅ Application never crashes completely from runtime errors
+- ✅ User sees friendly error messages instead of blank screen
+- ✅ Specific fallback UI for different error types
+- ✅ Errors properly logged for debugging
+- ✅ localStorage quota errors handled with clear messaging
+- ✅ Error boundaries around all critical UI sections
+- ✅ Refresh functionality allows user recovery
+- ✅ Error state properly resets on recovery
 
 **Files Changed:**
-- New: src/components/ErrorBoundary.jsx
-- New: src/components/ChartErrorBoundary.jsx
-- Modified: App.js, DebtSavingsThermometer.jsx
+- New: src/components/ErrorBoundary.tsx ✅
+- New: src/components/ChartErrorBoundary.tsx ✅
+- New: src/components/__tests__/ErrorBoundary.test.tsx ✅
+- New: src/components/__tests__/ChartErrorBoundary.test.tsx ✅
+- Modified: App.tsx ✅
+
+**Implementation Summary:**
+
+**ErrorBoundary Component:**
+- Full TypeScript implementation with proper interfaces (ErrorBoundaryProps, ErrorBoundaryState, FallbackComponentProps, ErrorSeverity)
+- getDerivedStateFromError and componentDidCatch lifecycle methods
+- User-friendly error messages based on error type (storage, network, calculation)
+- Error severity indicators (high/medium/low) with color-coded UI
+- Reset Application and Refresh Page recovery buttons
+- Development mode shows technical details
+- Optional custom fallback component support
+- onError callback for external error handling
+
+**ChartErrorBoundary Component:**
+- Specialized for chart rendering errors
+- Chart-specific error messages (canvas, data, library, memory)
+- Retry functionality with attempt limit (max 3 retries)
+- Fallback chart placeholder UI
+- Development debug info panel
+- Error logging with chart type and data length
+
+**Unit Tests:**
+- 49 passing tests covering both components
+- Error catching and fallback UI tests
+- User-friendly message tests for different error types
+- Error severity indicator tests
+- Recovery action tests (reset, refresh)
+- Callback tests (onError)
+- Custom fallback component tests
+- Development mode debug info tests
 
 **Impact:**
 This dramatically improves user experience during errors and makes debugging easier. Low risk implementation with high value for production readiness.
+
+---
+
+
+### Story 3.1.1: Unit Test Fixes
+
+**Owner:** Junior Dev
+**Effort:** 2 points
+**Dependencies:** none
+**Risk:** Low
+
+**Description:**
+There some broken unit tests due to recent changes. Address the failing unit tests and update the files.
+
+**Tasks:**
+- useGoalStats.test.js
+
+**Acceptance Criteria:**
+- All unit tests pass succesfully
+
+**Implementation Summary:**
+
+**Unit Tests:**
+- fix useGoalStats unit test
+
 
 ---
 
