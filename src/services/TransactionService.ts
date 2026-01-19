@@ -50,14 +50,10 @@ export class TransactionService {
         };
       }
 
-      // Validate note
-      if (!note || typeof note !== 'string' || note.trim().length === 0) {
-        return {
-          success: false,
-          error: 'Transaction note is required',
-          errorCode: TRANSACTION_SERVICE_ERROR_CODES.INVALID_NOTE
-        };
-      }
+      // Validate note - allow empty notes with a default value
+      const validatedNote = (note && typeof note === 'string' && note.trim().length > 0)
+        ? note.trim()
+        : (mode === MODES.SAVINGS ? 'Deposit' : 'Payment');
 
       // Validate mode
       if (mode !== MODES.SAVINGS && mode !== MODES.DEBT) {
@@ -90,7 +86,7 @@ export class TransactionService {
         id: Date.now() + (type === 'interest' ? 0 : 1), // Ensure unique IDs
         amount: transactionAmount,
         date: new Date().toISOString(),
-        note: note.trim(),
+        note: validatedNote,
         type: type,
         runningTotal: newRunningTotal
       };

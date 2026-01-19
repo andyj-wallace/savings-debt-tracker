@@ -81,15 +81,24 @@ describe('TransactionService', () => {
       expect(result.errorCode).toBe('INVALID_AMOUNT');
     });
 
-    test('should fail with empty note', () => {
-      const result = TransactionService.createTransaction(
+    test('should use default note when empty note provided', () => {
+      const savingsResult = TransactionService.createTransaction(
         100,
         '',
         MODES.SAVINGS as Mode
       );
 
-      expect(result.success).toBe(false);
-      expect(result.errorCode).toBe('INVALID_NOTE');
+      expect(savingsResult.success).toBe(true);
+      expect(savingsResult.data?.note).toBe('Deposit');
+
+      const debtResult = TransactionService.createTransaction(
+        100,
+        '',
+        MODES.DEBT as Mode
+      );
+
+      expect(debtResult.success).toBe(true);
+      expect(debtResult.data?.note).toBe('Payment');
     });
 
     test('should fail with invalid mode', () => {
