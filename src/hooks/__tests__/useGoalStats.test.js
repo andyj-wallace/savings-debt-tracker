@@ -5,37 +5,36 @@
  * Tests goal statistics calculations, progress tracking, and hook behavior.
  */
 
-import { renderHook } from '@testing-library/react';
+import { renderHook, waitFor } from '@testing-library/react';
 import { useGoalStats } from '../useGoalStats';
+import { TrackerContext } from '../../context/TrackerContext';
 import { TrackerProvider } from '../../context/TrackerProvider';
 
-// Mock the TrackerContext with test data
-const createWrapper = (initialState = {}) => {
-  const defaultState = {
+/**
+ * Creates a mock context provider wrapper for testing
+ * @param {Object} contextValue - The context values to provide
+ * @returns {Function} Wrapper component for renderHook
+ */
+const createMockWrapper = (contextValue) => {
+  const defaultContext = {
     mode: 'savings',
     goal: 1000,
-    current: 250,
-    transactions: [
-      { id: 1, amount: 100, type: 'transaction' },
-      { id: 2, amount: 150, type: 'transaction' }
-    ],
-    pendingInterest: 0
+    current: 0,
+    transactions: [],
+    pendingInterest: 0,
+    remaining: 1000,
+    percentage: 0
   };
 
-  const mockContext = { ...defaultState, ...initialState };
+  const mergedContext = { ...defaultContext, ...contextValue };
 
-  // Mock useTrackerContext
-  const MockProvider = ({ children }) => {
-    // This would normally be provided by TrackerProvider
-    return children;
+  return function MockWrapper({ children }) {
+    return (
+      <TrackerContext.Provider value={mergedContext}>
+        {children}
+      </TrackerContext.Provider>
+    );
   };
-
-  // For this test, we'll mock the useTrackerContext hook
-  jest.mock('../../context/TrackerContext', () => ({
-    useTrackerContext: () => mockContext
-  }));
-
-  return MockProvider;
 };
 
 describe('useGoalStats', () => {
@@ -44,10 +43,14 @@ describe('useGoalStats', () => {
   });
 
   test('should calculate savings progress correctly', () => {
-    const wrapper = createWrapper({
+    const wrapper = createMockWrapper({
       mode: 'savings',
       goal: 1000,
-      current: 250
+      current: 250,
+      transactions: [
+        { id: 1, amount: 100, type: 'transaction' },
+        { id: 2, amount: 150, type: 'transaction' }
+      ]
     });
 
     const { result } = renderHook(() => useGoalStats(), { wrapper });
@@ -59,10 +62,13 @@ describe('useGoalStats', () => {
   });
 
   test('should calculate debt progress correctly', () => {
-    const wrapper = createWrapper({
+    const wrapper = createMockWrapper({
       mode: 'debt',
       goal: 5000,
-      current: -2000 // $2000 paid off
+      current: -2000, // $2000 paid off
+      transactions: [
+        { id: 1, amount: -2000, type: 'transaction' }
+      ]
     });
 
     const { result } = renderHook(() => useGoalStats(), { wrapper });
@@ -73,10 +79,13 @@ describe('useGoalStats', () => {
   });
 
   test('should handle goal completion', () => {
-    const wrapper = createWrapper({
+    const wrapper = createMockWrapper({
       mode: 'savings',
       goal: 1000,
-      current: 1000
+      current: 1000,
+      transactions: [
+        { id: 1, amount: 1000, type: 'transaction' }
+      ]
     });
 
     const { result } = renderHook(() => useGoalStats(), { wrapper });
@@ -88,7 +97,7 @@ describe('useGoalStats', () => {
   });
 
   test('should provide detailed statistics for savings mode', () => {
-    const wrapper = createWrapper({
+    const wrapper = createMockWrapper({
       mode: 'savings',
       goal: 2000,
       current: 600,
@@ -109,11 +118,14 @@ describe('useGoalStats', () => {
   });
 
   test('should provide detailed statistics for debt mode', () => {
-    const wrapper = createWrapper({
+    const wrapper = createMockWrapper({
       mode: 'debt',
       goal: 8000,
       current: -3000, // $3000 paid
-      pendingInterest: 25
+      pendingInterest: 25,
+      transactions: [
+        { id: 1, amount: -3000, type: 'transaction' }
+      ]
     });
 
     const { result } = renderHook(() => useGoalStats(), { wrapper });
@@ -129,10 +141,13 @@ describe('useGoalStats', () => {
   });
 
   test('should calculate progress milestones', () => {
-    const wrapper = createWrapper({
+    const wrapper = createMockWrapper({
       mode: 'savings',
       goal: 1000,
-      current: 300
+      current: 300,
+      transactions: [
+        { id: 1, amount: 300, type: 'transaction' }
+      ]
     });
 
     const { result } = renderHook(() => useGoalStats(), { wrapper });
@@ -157,10 +172,13 @@ describe('useGoalStats', () => {
   });
 
   test('should provide formatted currency values', () => {
-    const wrapper = createWrapper({
+    const wrapper = createMockWrapper({
       mode: 'savings',
       goal: 1500,
-      current: 375
+      current: 375,
+      transactions: [
+        { id: 1, amount: 375, type: 'transaction' }
+      ]
     });
 
     const { result } = renderHook(() => useGoalStats(), { wrapper });
@@ -172,10 +190,13 @@ describe('useGoalStats', () => {
   });
 
   test('should calculate monthly payment correctly', () => {
-    const wrapper = createWrapper({
+    const wrapper = createMockWrapper({
       mode: 'savings',
       goal: 1200,
-      current: 200
+      current: 200,
+      transactions: [
+        { id: 1, amount: 200, type: 'transaction' }
+      ]
     });
 
     const { result } = renderHook(() => useGoalStats(), { wrapper });
@@ -187,10 +208,11 @@ describe('useGoalStats', () => {
   });
 
   test('should handle zero goal gracefully', () => {
-    const wrapper = createWrapper({
+    const wrapper = createMockWrapper({
       mode: 'savings',
       goal: 0,
-      current: 100
+      current: 100,
+      transactions: []
     });
 
     const { result } = renderHook(() => useGoalStats(), { wrapper });
@@ -203,15 +225,24 @@ describe('useGoalStats', () => {
 
 // Integration test with actual TrackerProvider
 describe('useGoalStats integration', () => {
-  test('should work with TrackerProvider', () => {
+  beforeEach(() => {
+    // Clear localStorage before each test
+    localStorage.clear();
+  });
+
+  test('should work with TrackerProvider', async () => {
     const wrapper = ({ children }) => (
       <TrackerProvider>{children}</TrackerProvider>
     );
 
     const { result } = renderHook(() => useGoalStats(), { wrapper });
 
+    // Wait for async state updates to complete
+    await waitFor(() => {
+      expect(typeof result.current.percentage).toBe('number');
+    });
+
     // Should have default values from TrackerProvider
-    expect(typeof result.current.percentage).toBe('number');
     expect(typeof result.current.remaining).toBe('number');
     expect(typeof result.current.isGoalReached).toBe('boolean');
     expect(result.current.detailedStats).toBeDefined();

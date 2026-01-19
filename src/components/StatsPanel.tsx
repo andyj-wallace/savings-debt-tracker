@@ -1,7 +1,7 @@
-import React from 'react';
 import StatCard from './StatCard';
 import { useGoalStats } from '../hooks/useGoalStats';
 import { useInterest } from '../hooks/useInterest';
+import { getModeColors } from '../constants';
 
 export default function StatsPanel() {
   const {
@@ -23,6 +23,7 @@ export default function StatsPanel() {
     formattedCurrent?: string;
   };
   const paidOff = mode === 'debt' ? (stats.debtPaidOff ?? stats.current) : stats.current;
+  const modeTextColor = getModeColors(mode).TEXT;
 
   return (
     <div className="flex flex-col gap-4">
@@ -30,7 +31,7 @@ export default function StatsPanel() {
       <StatCard
         label={stats.progressLabel}
         value={stats.formattedCurrent || `$${paidOff.toFixed(2)}`}
-        color={mode === 'savings' ? 'text-green-600' : 'text-red-600'}
+        color={modeTextColor}
       />
       {mode === 'debt' && hasPendingInterest && (
         <StatCard

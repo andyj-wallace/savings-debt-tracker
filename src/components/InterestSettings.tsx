@@ -1,7 +1,10 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Settings, Info } from 'lucide-react';
 import { useFieldValidation } from '../hooks/useValidation';
 import { MODES, LABELS, CSS_CLASSES, DEFAULTS } from '../constants';
+import { cardPresets } from '../styles/cardStyles';
+import { buttonPresets } from '../styles/buttonStyles';
+import { inputPresets, inputStates, inputHelperText } from '../styles/inputStyles';
 
 export default function InterestSettings({ interestRate, onUpdateRate, mode }) {
   const [isEditing, setIsEditing] = useState(false);
@@ -18,7 +21,6 @@ export default function InterestSettings({ interestRate, onUpdateRate, mode }) {
 
   // Ensure interestRate is a number
   const rate = typeof interestRate === 'number' ? interestRate : parseFloat(interestRate) || DEFAULTS.INTEREST_RATE;
-
 
   const handleUpdate = async () => {
     if (!tempRate.trim()) {
@@ -58,8 +60,12 @@ export default function InterestSettings({ interestRate, onUpdateRate, mode }) {
     rateValidation.clear();
   };
 
+  // Get input validation state
+  const inputState = inputStates.getValidationClasses(null, rateValidation.hasError, false);
+  const isDisabled = !tempRate.trim() || rateValidation.hasError;
+
   return (
-    <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+    <div className={`${cardPresets.primary()} mb-6`}>
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           <Settings size={20} className="text-slate-700" />
@@ -68,7 +74,7 @@ export default function InterestSettings({ interestRate, onUpdateRate, mode }) {
         {!isEditing && (
           <button
             onClick={() => setIsEditing(true)}
-            className="text-sm text-blue-500 hover:text-blue-700 underline"
+            className={buttonPresets.textLink()}
           >
             Edit
           </button>
@@ -76,7 +82,7 @@ export default function InterestSettings({ interestRate, onUpdateRate, mode }) {
       </div>
 
       {!isEditing ? (
-        <div className="flex items-center justify-between bg-slate-50 rounded-lg p-4">
+        <div className={`${cardPresets.compact()} flex items-center justify-between`}>
           <div>
             <div className={CSS_CLASSES.TEXT.LABEL}>{LABELS.COMMON.ANNUAL_INTEREST_RATE}</div>
             <div className={CSS_CLASSES.TEXT.VALUE}>{rate.toFixed(2)}%</div>
@@ -101,15 +107,11 @@ export default function InterestSettings({ interestRate, onUpdateRate, mode }) {
               onChange={handleInputChange}
               onBlur={handleInputBlur}
               placeholder={`${rate.toFixed(2)}%`}
-              className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 transition-colors ${
-                rateValidation.hasError
-                  ? 'border-red-500 focus:ring-red-500 focus:border-red-500'
-                  : 'border-slate-300 focus:ring-blue-500 focus:border-blue-500'
-              }`}
+              className={`w-full ${inputPresets.interestInput(inputState)}`}
               autoFocus
             />
             {rateValidation.showError && (
-              <div className="mt-1 text-sm text-red-600">
+              <div className={`mt-1 ${inputHelperText.error}`}>
                 {rateValidation.error}
               </div>
             )}
@@ -117,25 +119,21 @@ export default function InterestSettings({ interestRate, onUpdateRate, mode }) {
           <div className="flex gap-2">
             <button
               onClick={handleUpdate}
-              disabled={!tempRate.trim() || rateValidation.hasError}
-              className={`flex-1 px-6 py-2 rounded-lg font-medium transition-colors ${
-                !tempRate.trim() || rateValidation.hasError
-                  ? 'bg-slate-300 text-slate-500 cursor-not-allowed'
-                  : 'bg-blue-500 text-white hover:bg-blue-600'
-              }`}
+              disabled={isDisabled}
+              className={`flex-1 ${buttonPresets.formSubmit(isDisabled)}`}
             >
               Save
             </button>
             <button
               onClick={handleCancel}
-              className={CSS_CLASSES.BUTTONS.SECONDARY}
+              className={buttonPresets.formCancel()}
             >
               Cancel
             </button>
           </div>
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+          <div className={cardPresets.info()}>
             <div className="text-xs text-blue-800">
-              <strong>Tip:</strong> Check your credit card statement for the APR. 
+              <strong>Tip:</strong> Check your credit card statement for the APR.
               Common rates range from 15% to 25%.
             </div>
           </div>

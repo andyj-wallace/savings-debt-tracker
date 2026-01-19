@@ -11,6 +11,8 @@
 import React, { ReactNode, ErrorInfo, ComponentType } from 'react';
 import { AlertTriangle, RefreshCw, Home } from 'lucide-react';
 import { CSS_CLASSES } from '../constants';
+import { buttonPresets } from '../styles/buttonStyles';
+import { cardPresets } from '../styles/cardStyles';
 
 /**
  * Props for custom fallback components
@@ -268,14 +270,14 @@ class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundarySta
               <div className="flex flex-col sm:flex-row gap-3">
                 <button
                   onClick={this.handleReset}
-                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+                  className={`flex-1 flex items-center justify-center gap-2 ${buttonPresets.formSubmit()}`}
                 >
                   <Home size={16} />
                   Reset Application
                 </button>
                 <button
                   onClick={this.handleRefresh}
-                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-slate-500 text-white rounded-lg hover:bg-slate-600 transition-colors"
+                  className={`flex-1 flex items-center justify-center gap-2 ${buttonPresets.formCancel()}`}
                 >
                   <RefreshCw size={16} />
                   Refresh Page

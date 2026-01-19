@@ -1,9 +1,11 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { ChevronDown, ChevronUp, TrendingUp, TrendingDown, Percent } from 'lucide-react';
 import { formatCurrency } from '../utils/formatCurrency';
 import { formatDate } from '../utils/dateUtils';
 import { useTransactions } from '../hooks/useTransactions';
 import { useGoalStats } from '../hooks/useGoalStats';
+import { cardPresets } from '../styles/cardStyles';
+import { buttonPresets } from '../styles/buttonStyles';
 
 export default function TransactionHistory() {
   const { transactions, deleteTransaction } = useTransactions();
@@ -43,7 +45,7 @@ export default function TransactionHistory() {
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+    <div className={`${cardPresets.primary()} mb-6`}>
       <button
         onClick={() => setIsExpanded(!isExpanded)}
         className="w-full flex items-center justify-between text-lg font-semibold text-slate-700 mb-4"
@@ -57,7 +59,7 @@ export default function TransactionHistory() {
           {reversedTransactions.map((transaction) => (
             <div
               key={transaction.id}
-              className="flex items-center justify-between p-3 bg-slate-50 rounded-lg hover:bg-slate-100 transition-colors"
+              className={cardPresets.listItem(true)}
             >
               <div className="flex items-center gap-3">
                 <div className={`p-2 rounded-full ${getTransactionColor(transaction)}`}>
@@ -94,7 +96,7 @@ export default function TransactionHistory() {
                 {transaction.type !== 'interest' && (
                   <button
                     onClick={() => deleteTransaction(transaction.id)}
-                    className="text-red-500 hover:text-red-700 text-sm underline"
+                    className={buttonPresets.textLink()}
                   >
                     Delete
                   </button>
