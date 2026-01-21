@@ -270,7 +270,7 @@ export const createCardLayout = ({
   };
 };
 
-export default {
+export const cardStyles = {
   getCardClasses,
   cardPresets,
   cardHeader,

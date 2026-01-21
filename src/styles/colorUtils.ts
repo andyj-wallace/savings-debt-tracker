@@ -338,7 +338,6 @@ export const getProgressColors = (percentage, mode) => {
  * @returns {string} Gradient CSS classes
  */
 export const getModeGradient = (mode, direction = 'to-r') => {
-  const colors = getModeColors(mode);
   const scheme = getModeColorScheme(mode);
   const primaryColor = scheme.primary;
 

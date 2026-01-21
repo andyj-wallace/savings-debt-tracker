@@ -12,7 +12,6 @@ import React, { ReactNode, ErrorInfo, ComponentType } from 'react';
 import { AlertTriangle, RefreshCw, Home } from 'lucide-react';
 import { CSS_CLASSES } from '../constants';
 import { buttonPresets } from '../styles/buttonStyles';
-import { cardPresets } from '../styles/cardStyles';
 
 /**
  * Props for custom fallback components

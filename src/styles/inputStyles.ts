@@ -8,8 +8,6 @@
  * @fileoverview Input styling utility functions and style objects
  */
 
-import { getModeColors } from './colorUtils';
-
 /**
  * Base input styles that apply to all inputs
  */
@@ -55,7 +53,6 @@ export const inputVariants = {
  */
 export const modeInputVariants = {
   modeDefault: (mode) => {
-    const colors = getModeColors(mode);
     const colorName = mode === 'savings' ? 'green' : 'red';
     return {
       base: `border-slate-300 bg-white text-slate-700 placeholder-slate-400 focus:border-${colorName}-500 focus:ring-${colorName}-500`,
@@ -292,7 +289,7 @@ export const inputStates = {
   }
 };
 
-export default {
+export const inputStyles = {
   getInputClasses,
   inputPresets,
   createInputLayout,

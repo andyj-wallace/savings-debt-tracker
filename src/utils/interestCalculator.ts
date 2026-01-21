@@ -1,5 +1,5 @@
 import { config } from '../config/app.config';
-import type { InterestCalculation, Transaction, CompoundingFrequency, RoundingMode } from '../types';
+import type { InterestCalculation, Transaction } from '../types';
 
 /**
  * Calculate credit card interest using configurable compounding

@@ -7,9 +7,6 @@
  *
  * @fileoverview Input validation functions for financial tracker
  */
-
-import { DEFAULTS } from '../constants';
-
 /**
  * Validation result structure
  */

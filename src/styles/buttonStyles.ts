@@ -219,7 +219,7 @@ export const getButtonHoverStates = (variant, mode = null) => {
   return hoverStates[variant] || '';
 };
 
-export default {
+export const buttonStyles = {
   getButtonClasses,
   buttonPresets,
   createButtonStyles,

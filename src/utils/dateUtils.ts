@@ -7,7 +7,6 @@ export function formatDate(date: Date | string, options: DateOptions = {}): stri
   const {
     locale = dateTimeConfig.locale,
     includeTime = true,
-    dateStyle = 'medium'
   } = options;
 
   const formatOptions: Intl.DateTimeFormatOptions = {

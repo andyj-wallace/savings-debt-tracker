@@ -15,10 +15,8 @@ import {
   validateInterestRate,
   validateNote,
   validateTransaction,
-  validationPresets,
-  validateFields
+  validationPresets
 } from '../utils/validators';
-import { createError, ERROR_SEVERITY } from '../utils/errorMessages';
 
 /**
  * Custom hook for form validation
