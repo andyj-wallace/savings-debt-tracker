@@ -12,6 +12,7 @@
 /.claude
 RoadMap.md
 Stories.md
+/docs
 
 # production
 /build
