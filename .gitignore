@@ -8,10 +8,8 @@
 # testing
 /coverage
 
-# AI
+# fo the AI
 /.claude
-RoadMap.md
-Stories.md
 /docs
 
 # production
