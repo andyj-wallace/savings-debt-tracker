@@ -1,8 +1,10 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
+import { AuthProvider } from 'react-oidc-context';
 import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
+import authConfig from './config/auth.config';
 
 const rootElement = document.getElementById('root');
 if (!rootElement) {
@@ -12,7 +14,9 @@ if (!rootElement) {
 const root = ReactDOM.createRoot(rootElement);
 root.render(
   <React.StrictMode>
-    <App />
+    <AuthProvider {...authConfig}>
+      <App />
+    </AuthProvider>
   </React.StrictMode>
 );
 

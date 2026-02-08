@@ -114,6 +114,24 @@ Migration Strategy (Frontend → AWS Backend)
 6. One-time import of existing localStorage data
 This incremental approach avoids downtime and data loss.
 
+## Deployment
+
+### Frontend Deployment
+The frontend is hosted on S3 and served via CloudFront. To deploy:
+
+```bash
+./scripts/deploy.sh
+```
+
+This script:
+1. Builds the React app (`npm run build`)
+2. Syncs the build output to S3
+3. Invalidates the CloudFront cache
+
+**Prerequisites:**
+- AWS CLI configured with appropriate credentials
+- S3 bucket and CloudFront distribution already provisioned
+
 Summary
 Debt Tracker is intentionally designed as a systems-focused serverless application, emphasizing tradeoffs, failure handling, and cost-aware architecture. The project demonstrates how time-based financial logic can be modeled using event-driven patterns on AWS, rather than as a simple CRUD application.
 
