@@ -116,29 +116,46 @@ This incremental approach avoids downtime and data loss.
 
 ## Deployment
 
+### Infrastructure Setup (IaC)
+
+All AWS infrastructure is provisioned via bash scripts in `scripts/`. To set up from scratch:
+
+```bash
+./scripts/setup-infrastructure.sh              # Run all phases
+./scripts/setup-infrastructure.sh --phase 2,3  # Run specific phases
+./scripts/setup-infrastructure.sh --dry-run    # Preview changes
+```
+
+| Phase | Resources Created |
+|-------|-------------------|
+| 1 | IAM roles for Lambda (CloudWatch Logs + DynamoDB policies) |
+| 2 | S3 bucket + CloudFront distribution (HTTPS, SPA routing) |
+| 3 | Cognito User Pool + App Client + Hosted UI |
+| 4 | API Gateway HTTP API with JWT authorizer |
+
+Configuration is split between **input** (project name, region in `config.sh`) and **generated** (AWS-created IDs stored in JSON files). See [docs/infrastructure-scripts.md](docs/infrastructure-scripts.md) for details.
+
+To tear down: `./scripts/cleanup-infrastructure.sh`
+
 ### Frontend Deployment
-The frontend is hosted on S3 and served via CloudFront. To deploy:
+
+Deploy the React app to S3/CloudFront:
 
 ```bash
 ./scripts/deploy.sh
 ```
 
-This script:
-1. Builds the React app (`npm run build`)
-2. Syncs the build output to S3
-3. Invalidates the CloudFront cache
+Builds the app, syncs to S3, and invalidates CloudFront cache.
 
-**Prerequisites:**
-- AWS CLI configured with appropriate credentials
-- S3 bucket and CloudFront distribution already provisioned
+**Prerequisites:** AWS CLI configured, infrastructure provisioned via `setup-infrastructure.sh`
 
 Summary
 Debt Tracker is intentionally designed as a systems-focused serverless application, emphasizing tradeoffs, failure handling, and cost-aware architecture. The project demonstrates how time-based financial logic can be modeled using event-driven patterns on AWS, rather than as a simple CRUD application.
 
 
-Appendix: “What I’d Do Next With More Scale”
-If usage or funding increased, I’d focus on resilience, observability, and cost control:
-* Replace manual configs with Terraform/CDK
+Appendix: "What I'd Do Next With More Scale"
+If usage or funding increased, I'd focus on resilience, observability, and cost control:
+* Migrate bash IaC scripts to Terraform/CDK for state management
 * Add CI/CD (GitHub Actions → AWS)
 * Introduce CloudWatch dashboards + alarms
 * Add API caching (API Gateway / CloudFront)
