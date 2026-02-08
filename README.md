@@ -132,6 +132,7 @@ All AWS infrastructure is provisioned via bash scripts in `scripts/`. To set up 
 | 2 | S3 bucket + CloudFront distribution (HTTPS, SPA routing) |
 | 3 | Cognito User Pool + App Client + Hosted UI |
 | 4 | API Gateway HTTP API with JWT authorizer |
+| 6 | DynamoDB table (single-table design with PK/SK) |
 
 Configuration is split between **input** (project name, region in `config.sh`) and **generated** (AWS-created IDs stored in JSON files). See [docs/infrastructure-scripts.md](docs/infrastructure-scripts.md) for details.
 
@@ -148,6 +149,13 @@ Deploy the React app to S3/CloudFront:
 Builds the app, syncs to S3, and invalidates CloudFront cache.
 
 **Prerequisites:** AWS CLI configured, infrastructure provisioned via `setup-infrastructure.sh`
+
+### Lambda Types
+
+TypeScript type definitions for DynamoDB entities are in `lambda/src/types/`:
+- `dynamodb.ts` - Entity interfaces (TrackerItem, EntryItem, SummaryItem)
+- `keys.ts` - Key generation utilities for single-table design
+- Schema documentation in `lambda/SCHEMA.md`
 
 Summary
 Debt Tracker is intentionally designed as a systems-focused serverless application, emphasizing tradeoffs, failure handling, and cost-aware architecture. The project demonstrates how time-based financial logic can be modeled using event-driven patterns on AWS, rather than as a simple CRUD application.

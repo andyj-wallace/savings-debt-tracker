@@ -23,7 +23,7 @@ source "$SCRIPT_DIR/config.sh"
 #-------------------------------------------------------------------------------
 # Parse Arguments
 #-------------------------------------------------------------------------------
-CLEANUP_PHASES="3,2,1"  # Reverse order for dependencies
+CLEANUP_PHASES="6,3,2,1"  # Reverse order for dependencies
 FORCE=false
 DRY_RUN=false
 
@@ -51,6 +51,7 @@ while [[ $# -gt 0 ]]; do
             echo "  --help           Show this help message"
             echo ""
             echo "Phases (cleaned in reverse order):"
+            echo "  6: DynamoDB Data Model"
             echo "  3: Cognito Authentication"
             echo "  2: Frontend Hosting (S3 + CloudFront)"
             echo "  1: IAM Roles"
@@ -112,6 +113,33 @@ if [ "$FORCE" != true ] && [ "$DRY_RUN" != true ]; then
     if ! confirm "Are you sure you want to continue?"; then
         echo "Cleanup cancelled."
         exit 0
+    fi
+fi
+
+#-------------------------------------------------------------------------------
+# Phase 6 Cleanup: DynamoDB
+#-------------------------------------------------------------------------------
+if should_cleanup_phase 6; then
+    print_header "Cleaning up Phase 6: DynamoDB"
+
+    if [ "$DRY_RUN" = true ]; then
+        echo "Would delete:"
+        echo "  - DynamoDB table: $DYNAMODB_TABLE_NAME"
+    else
+        if aws dynamodb describe-table --table-name "$DYNAMODB_TABLE_NAME" --region "$AWS_REGION" >/dev/null 2>&1; then
+            print_step "Deleting DynamoDB table: $DYNAMODB_TABLE_NAME"
+            aws dynamodb delete-table \
+                --table-name "$DYNAMODB_TABLE_NAME" \
+                --region "$AWS_REGION" >/dev/null
+
+            print_info "Waiting for table deletion..."
+            aws dynamodb wait table-not-exists \
+                --table-name "$DYNAMODB_TABLE_NAME" \
+                --region "$AWS_REGION" 2>/dev/null || true
+            print_success "DynamoDB table deleted"
+        else
+            print_info "No DynamoDB table found to delete"
+        fi
     fi
 fi
 

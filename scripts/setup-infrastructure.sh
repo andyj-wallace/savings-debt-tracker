@@ -9,6 +9,7 @@
 #   Phase 1: AWS Account & IAM Baseline (verification + IAM roles)
 #   Phase 2: Frontend Hosting (S3 + CloudFront)
 #   Phase 3: Cognito Authentication
+#   Phase 6: DynamoDB Data Model
 #
 # Usage:
 #   ./setup-infrastructure.sh              # Run all phases
@@ -28,7 +29,7 @@ source "$SCRIPT_DIR/config.sh"
 #-------------------------------------------------------------------------------
 # Parse Arguments
 #-------------------------------------------------------------------------------
-RUN_PHASES="1,2,3"
+RUN_PHASES="1,2,3,6"
 SKIP_PHASES=""
 DRY_RUN=false
 
@@ -59,6 +60,7 @@ while [[ $# -gt 0 ]]; do
             echo "  1: AWS Account & IAM Baseline"
             echo "  2: Frontend Hosting (S3 + CloudFront)"
             echo "  3: Cognito Authentication"
+            echo "  6: DynamoDB Data Model"
             exit 0
             ;;
         *)
@@ -187,6 +189,26 @@ if should_run_phase 3; then
     fi
 else
     echo "Skipping Phase 3: Cognito Authentication"
+fi
+
+#-------------------------------------------------------------------------------
+# Phase 6: DynamoDB Data Model
+#-------------------------------------------------------------------------------
+if should_run_phase 6; then
+    print_header "PHASE 6: DynamoDB Data Model"
+
+    if [ "$DRY_RUN" = true ]; then
+        echo "Would run:"
+        echo "  - phase6/01-setup-dynamodb.sh"
+    else
+        echo "Running Phase 6 scripts..."
+        echo ""
+
+        # Setup DynamoDB table
+        bash "$SCRIPT_DIR/phase6/01-setup-dynamodb.sh"
+    fi
+else
+    echo "Skipping Phase 6: DynamoDB Data Model"
 fi
 
 #-------------------------------------------------------------------------------

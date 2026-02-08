@@ -110,6 +110,14 @@ if [ -f "$IAM_CONFIG_FILE" ]; then
 fi
 
 #-------------------------------------------------------------------------------
+# Load DynamoDB config (created by phase6/01-setup-dynamodb.sh)
+#-------------------------------------------------------------------------------
+DYNAMODB_CONFIG_FILE="$SCRIPTS_DIR/dynamodb-config.json"
+if [ -f "$DYNAMODB_CONFIG_FILE" ]; then
+    export DYNAMODB_TABLE_ARN=$(jq -r '.tableArn // empty' "$DYNAMODB_CONFIG_FILE" 2>/dev/null)
+fi
+
+#-------------------------------------------------------------------------------
 # Cognito Callback URLs (depend on CloudFront URL)
 #-------------------------------------------------------------------------------
 export COGNITO_CALLBACK_URLS="http://localhost:3000/callback,${CLOUDFRONT_URL}/"
