@@ -2,6 +2,7 @@ import DebtSavingsThermometer from './components/DebtSavingsThermometer';
 import { TrackerProvider } from './context/TrackerProvider';
 import ErrorBoundary from './components/ErrorBoundary';
 import AuthHeader from './components/AuthHeader';
+import ProtectedRoute from './components/ProtectedRoute';
 
 /**
  * Top-level error handler for logging critical errors
@@ -23,10 +24,12 @@ function App() {
       onError={handleCriticalError}
       showErrorDetails={process.env.NODE_ENV === 'development'}
     >
-      <AuthHeader />
-      <TrackerProvider>
-        <DebtSavingsThermometer />
-      </TrackerProvider>
+      <ProtectedRoute>
+        <AuthHeader />
+        <TrackerProvider>
+          <DebtSavingsThermometer />
+        </TrackerProvider>
+      </ProtectedRoute>
     </ErrorBoundary>
   );
 }
