@@ -9,6 +9,7 @@
 #   Phase 1: AWS Account & IAM Baseline (verification + IAM roles)
 #   Phase 2: Frontend Hosting (S3 + CloudFront)
 #   Phase 3: Cognito Authentication
+#   Phase 5: Lambda Service Layer
 #   Phase 6: DynamoDB Data Model
 #
 # Usage:
@@ -29,7 +30,7 @@ source "$SCRIPT_DIR/config.sh"
 #-------------------------------------------------------------------------------
 # Parse Arguments
 #-------------------------------------------------------------------------------
-RUN_PHASES="1,2,3,6"
+RUN_PHASES="1,2,3,5,6"
 SKIP_PHASES=""
 DRY_RUN=false
 
@@ -60,6 +61,7 @@ while [[ $# -gt 0 ]]; do
             echo "  1: AWS Account & IAM Baseline"
             echo "  2: Frontend Hosting (S3 + CloudFront)"
             echo "  3: Cognito Authentication"
+            echo "  5: Lambda Service Layer"
             echo "  6: DynamoDB Data Model"
             exit 0
             ;;
@@ -192,6 +194,34 @@ else
 fi
 
 #-------------------------------------------------------------------------------
+# Phase 5: Lambda Service Layer
+#-------------------------------------------------------------------------------
+if should_run_phase 5; then
+    print_header "PHASE 5: Lambda Service Layer"
+
+    if [ "$DRY_RUN" = true ]; then
+        echo "Would run:"
+        echo "  - phase5/01-build-lambda.sh"
+        echo "  - phase5/02-deploy-lambdas.sh"
+        echo "  - phase5/03-integrate-api-gateway.sh"
+    else
+        echo "Running Phase 5 scripts..."
+        echo ""
+
+        # Build Lambda functions
+        bash "$SCRIPT_DIR/phase5/01-build-lambda.sh"
+
+        # Deploy Lambda functions
+        bash "$SCRIPT_DIR/phase5/02-deploy-lambdas.sh"
+
+        # Integrate with API Gateway
+        bash "$SCRIPT_DIR/phase5/03-integrate-api-gateway.sh"
+    fi
+else
+    echo "Skipping Phase 5: Lambda Service Layer"
+fi
+
+#-------------------------------------------------------------------------------
 # Phase 6: DynamoDB Data Model
 #-------------------------------------------------------------------------------
 if should_run_phase 6; then
@@ -234,9 +264,9 @@ else
     echo "Next Steps:"
     echo "  1. Deploy frontend:    ./scripts/deploy.sh"
     echo "  2. Verify S3/CF:       ./scripts/verify-s3-cloudfront.sh"
-    echo "  3. Setup API Gateway:  ./scripts/setup-api-gateway.sh"
     echo ""
     echo "Frontend URL: $CLOUDFRONT_URL"
+    echo "API Endpoint: $API_GATEWAY_ENDPOINT"
 
     # Show Cognito config if Phase 3 was run
     if [ -f "$SCRIPT_DIR/cognito-config.json" ]; then
