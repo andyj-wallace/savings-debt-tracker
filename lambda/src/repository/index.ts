@@ -22,4 +22,5 @@ export {
   createEntry,
   listEntries,
   listEntriesByDateRange,
+  updateSummaryForEntry,
 } from './entryRepository';

@@ -71,7 +71,7 @@ export const createEntry = async (
   );
 
   // Update the summary
-  await updateSummaryOnEntryCreate(
+  await updateSummaryForEntry(
     input.userId,
     input.trackerId,
     input.amount,
@@ -85,7 +85,7 @@ export const createEntry = async (
 /**
  * Update summary when an entry is created
  */
-const updateSummaryOnEntryCreate = async (
+export const updateSummaryForEntry = async (
   userId: string,
   trackerId: string,
   amount: number,

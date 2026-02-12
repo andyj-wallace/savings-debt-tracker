@@ -188,6 +188,20 @@ A summary provides pre-computed statistics for a tracker, enabling fast dashboar
 
 ---
 
+## GSI Evaluation
+
+**Conclusion: No GSI required.**
+
+All current access patterns are efficiently served by the base table's composite primary key (`PK` + `SK`):
+
+- **List trackers**: `Query PK = USER#<userId>, SK begins_with TRACKER#` — single partition query, returns only tracker items for the authenticated user. O(n) where n is the user's tracker count (expected <100 per user).
+- **List entries**: `Query PK = USER#<userId>, SK begins_with ENTRY#<trackerId>#` — scoped to a single tracker within the user's partition.
+- **Get tracker/summary**: `GetItem` by exact PK + SK — O(1) lookup.
+
+A GSI would only be warranted if we needed to query across users (e.g., admin listing all trackers) or by a non-key attribute (e.g., find trackers by mode). Neither pattern is required today. If admin access patterns are added in the future (Phase 11), a GSI can be evaluated at that time.
+
+---
+
 ## Data Conventions
 
 ### Monetary Values
