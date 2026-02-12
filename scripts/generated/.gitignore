@@ -1,0 +1,6 @@
+# Ignore all generated config files
+*.json
+
+# But track this .gitignore and README
+!.gitignore
+!README.md

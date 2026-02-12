@@ -185,7 +185,7 @@ EOF
 )
 
 # Save bucket policy to file for next script
-POLICY_FILE="$SCRIPT_DIR/../cloudfront-bucket-policy.json"
+POLICY_FILE="$SCRIPT_DIR/../generated/cloudfront-bucket-policy.json"
 echo "$BUCKET_POLICY" > "$POLICY_FILE"
 print_success "Bucket policy saved to: $POLICY_FILE"
 
@@ -210,7 +210,7 @@ echo ""
 echo "Next: Run 03-setup-bucket-policy.sh to allow CloudFront access to S3"
 
 # Save CloudFront config
-CLOUDFRONT_CONFIG_FILE="$SCRIPT_DIR/../cloudfront-config.json"
+CLOUDFRONT_CONFIG_FILE="$SCRIPT_DIR/../generated/cloudfront-config.json"
 cat > "$CLOUDFRONT_CONFIG_FILE" << EOF
 {
     "distributionId": "$DISTRIBUTION_ID",

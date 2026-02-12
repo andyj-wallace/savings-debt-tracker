@@ -214,7 +214,7 @@ print_success "Log groups configured with $LOG_RETENTION_DAYS day retention"
 #-------------------------------------------------------------------------------
 print_step "Saving Lambda configuration..."
 
-LAMBDA_CONFIG_FILE="$SCRIPT_DIR/../lambda-config.json"
+LAMBDA_CONFIG_FILE="$SCRIPT_DIR/../generated/lambda-config.json"
 
 # Build JSON with all function ARNs
 LAMBDA_ARNS_JSON="{"

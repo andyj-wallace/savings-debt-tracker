@@ -6,7 +6,7 @@
 # Use this if you need to recreate the API from scratch
 #===============================================================================
 
-CONFIG_FILE="scripts/api-gateway-config.json"
+CONFIG_FILE="scripts/generated/api-gateway-config.json"
 
 if [ ! -f "$CONFIG_FILE" ]; then
   echo "Error: Configuration file not found at $CONFIG_FILE"

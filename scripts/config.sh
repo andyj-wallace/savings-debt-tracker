@@ -69,7 +69,7 @@ export LOG_RETENTION_DAYS=30
 #-------------------------------------------------------------------------------
 # Load CloudFront config (created by phase2/02-setup-cloudfront.sh)
 #-------------------------------------------------------------------------------
-CLOUDFRONT_CONFIG_FILE="$SCRIPTS_DIR/cloudfront-config.json"
+CLOUDFRONT_CONFIG_FILE="$SCRIPTS_DIR/generated/cloudfront-config.json"
 if [ -f "$CLOUDFRONT_CONFIG_FILE" ]; then
     export CLOUDFRONT_DISTRIBUTION_ID=$(jq -r '.distributionId // empty' "$CLOUDFRONT_CONFIG_FILE" 2>/dev/null)
     export CLOUDFRONT_DOMAIN=$(jq -r '.distributionDomain // empty' "$CLOUDFRONT_CONFIG_FILE" 2>/dev/null)
@@ -84,7 +84,7 @@ fi
 #-------------------------------------------------------------------------------
 # Load Cognito config (created by phase3 scripts)
 #-------------------------------------------------------------------------------
-COGNITO_CONFIG_FILE="$SCRIPTS_DIR/cognito-config.json"
+COGNITO_CONFIG_FILE="$SCRIPTS_DIR/generated/cognito-config.json"
 if [ -f "$COGNITO_CONFIG_FILE" ]; then
     export COGNITO_USER_POOL_ID=$(jq -r '.userPoolId // empty' "$COGNITO_CONFIG_FILE" 2>/dev/null)
     export COGNITO_CLIENT_ID=$(jq -r '.clientId // empty' "$COGNITO_CONFIG_FILE" 2>/dev/null)
@@ -95,7 +95,7 @@ fi
 #-------------------------------------------------------------------------------
 # Load API Gateway config (created by setup-api-gateway.sh)
 #-------------------------------------------------------------------------------
-API_GATEWAY_CONFIG_FILE="$SCRIPTS_DIR/api-gateway-config.json"
+API_GATEWAY_CONFIG_FILE="$SCRIPTS_DIR/generated/api-gateway-config.json"
 if [ -f "$API_GATEWAY_CONFIG_FILE" ]; then
     export API_GATEWAY_ID=$(jq -r '.apiId // empty' "$API_GATEWAY_CONFIG_FILE" 2>/dev/null)
     export API_GATEWAY_ENDPOINT=$(jq -r '.apiEndpoint // empty' "$API_GATEWAY_CONFIG_FILE" 2>/dev/null)
@@ -104,7 +104,7 @@ fi
 #-------------------------------------------------------------------------------
 # Load IAM config (created by phase1/02-setup-iam-roles.sh)
 #-------------------------------------------------------------------------------
-IAM_CONFIG_FILE="$SCRIPTS_DIR/iam-config.json"
+IAM_CONFIG_FILE="$SCRIPTS_DIR/generated/iam-config.json"
 if [ -f "$IAM_CONFIG_FILE" ]; then
     export LAMBDA_EXECUTION_ROLE_ARN=$(jq -r '.executionRoleArn // empty' "$IAM_CONFIG_FILE" 2>/dev/null)
 fi
@@ -112,7 +112,7 @@ fi
 #-------------------------------------------------------------------------------
 # Load DynamoDB config (created by phase6/01-setup-dynamodb.sh)
 #-------------------------------------------------------------------------------
-DYNAMODB_CONFIG_FILE="$SCRIPTS_DIR/dynamodb-config.json"
+DYNAMODB_CONFIG_FILE="$SCRIPTS_DIR/generated/dynamodb-config.json"
 if [ -f "$DYNAMODB_CONFIG_FILE" ]; then
     export DYNAMODB_TABLE_ARN=$(jq -r '.tableArn // empty' "$DYNAMODB_CONFIG_FILE" 2>/dev/null)
 fi

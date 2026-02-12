@@ -26,7 +26,7 @@ print_header "Phase 3: Setup Cognito Domain (Hosted UI)"
 #-------------------------------------------------------------------------------
 print_step "Loading User Pool configuration..."
 
-COGNITO_CONFIG_FILE="$SCRIPT_DIR/../cognito-config.json"
+COGNITO_CONFIG_FILE="$SCRIPT_DIR/../generated/cognito-config.json"
 
 if [ ! -f "$COGNITO_CONFIG_FILE" ]; then
     print_error "Cognito configuration not found. Run 01-setup-cognito-user-pool.sh first."

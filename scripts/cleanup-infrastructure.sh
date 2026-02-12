@@ -23,7 +23,7 @@ source "$SCRIPT_DIR/config.sh"
 #-------------------------------------------------------------------------------
 # Parse Arguments
 #-------------------------------------------------------------------------------
-CLEANUP_PHASES="6,3,2,1"  # Reverse order for dependencies
+CLEANUP_PHASES="6,5,4,3,2,1"  # Reverse order for dependencies
 FORCE=false
 DRY_RUN=false
 
@@ -52,6 +52,8 @@ while [[ $# -gt 0 ]]; do
             echo ""
             echo "Phases (cleaned in reverse order):"
             echo "  6: DynamoDB Data Model"
+            echo "  5: Lambda Functions"
+            echo "  4: API Gateway"
             echo "  3: Cognito Authentication"
             echo "  2: Frontend Hosting (S3 + CloudFront)"
             echo "  1: IAM Roles"
@@ -144,6 +146,93 @@ if should_cleanup_phase 6; then
 fi
 
 #-------------------------------------------------------------------------------
+# Phase 5 Cleanup: Lambda Functions
+#-------------------------------------------------------------------------------
+if should_cleanup_phase 5; then
+    print_header "Cleaning up Phase 5: Lambda Functions"
+
+    # List of Lambda functions to delete
+    LAMBDA_FUNCTIONS=(
+        "${PROJECT_NAME}-create-tracker"
+        "${PROJECT_NAME}-list-trackers"
+        "${PROJECT_NAME}-get-tracker"
+        "${PROJECT_NAME}-update-tracker"
+        "${PROJECT_NAME}-delete-tracker"
+        "${PROJECT_NAME}-create-entry"
+        "${PROJECT_NAME}-list-entries"
+    )
+
+    if [ "$DRY_RUN" = true ]; then
+        echo "Would delete:"
+        for func in "${LAMBDA_FUNCTIONS[@]}"; do
+            echo "  - Lambda function: $func"
+        done
+        echo "  - CloudWatch log groups for Lambda functions"
+    else
+        for func in "${LAMBDA_FUNCTIONS[@]}"; do
+            if aws lambda get-function --function-name "$func" --region "$AWS_REGION" >/dev/null 2>&1; then
+                print_step "Deleting Lambda function: $func"
+                aws lambda delete-function \
+                    --function-name "$func" \
+                    --region "$AWS_REGION"
+                print_success "Deleted: $func"
+
+                # Delete associated log group
+                LOG_GROUP="/aws/lambda/$func"
+                if aws logs describe-log-groups --log-group-name-prefix "$LOG_GROUP" --region "$AWS_REGION" --query "logGroups[?logGroupName=='$LOG_GROUP']" --output text 2>/dev/null | grep -q "$LOG_GROUP"; then
+                    aws logs delete-log-group --log-group-name "$LOG_GROUP" --region "$AWS_REGION" 2>/dev/null || true
+                    print_info "Deleted log group: $LOG_GROUP"
+                fi
+            else
+                print_info "Lambda not found: $func"
+            fi
+        done
+
+        # Remove lambda config file
+        rm -f "$SCRIPT_DIR/generated/lambda-config.json" 2>/dev/null || true
+    fi
+fi
+
+#-------------------------------------------------------------------------------
+# Phase 4 Cleanup: API Gateway
+#-------------------------------------------------------------------------------
+if should_cleanup_phase 4; then
+    print_header "Cleaning up Phase 4: API Gateway"
+
+    if [ "$DRY_RUN" = true ]; then
+        echo "Would delete:"
+        echo "  - API Gateway: $API_GATEWAY_NAME"
+        echo "  - CloudWatch log group: /aws/apigateway/$API_GATEWAY_NAME"
+    else
+        # Find API Gateway by name
+        API_ID=$(aws apigatewayv2 get-apis \
+            --region "$AWS_REGION" \
+            --query "Items[?Name=='$API_GATEWAY_NAME'].ApiId" \
+            --output text 2>/dev/null || echo "")
+
+        if [ -n "$API_ID" ] && [ "$API_ID" != "None" ]; then
+            print_step "Deleting API Gateway: $API_GATEWAY_NAME (ID: $API_ID)"
+            aws apigatewayv2 delete-api \
+                --api-id "$API_ID" \
+                --region "$AWS_REGION"
+            print_success "API Gateway deleted"
+
+            # Delete associated log group
+            LOG_GROUP="/aws/apigateway/$API_GATEWAY_NAME"
+            if aws logs describe-log-groups --log-group-name-prefix "$LOG_GROUP" --region "$AWS_REGION" --query "logGroups[?logGroupName=='$LOG_GROUP']" --output text 2>/dev/null | grep -q "$LOG_GROUP"; then
+                aws logs delete-log-group --log-group-name "$LOG_GROUP" --region "$AWS_REGION" 2>/dev/null || true
+                print_info "Deleted log group: $LOG_GROUP"
+            fi
+        else
+            print_info "No API Gateway found to delete"
+        fi
+
+        # Remove api gateway config file
+        rm -f "$SCRIPT_DIR/generated/api-gateway-config.json" 2>/dev/null || true
+    fi
+fi
+
+#-------------------------------------------------------------------------------
 # Phase 3 Cleanup: Cognito
 #-------------------------------------------------------------------------------
 if should_cleanup_phase 3; then
@@ -188,6 +277,9 @@ if should_cleanup_phase 3; then
         else
             print_info "No User Pool found to delete"
         fi
+
+        # Remove cognito config file
+        rm -f "$SCRIPT_DIR/generated/cognito-config.json" 2>/dev/null || true
     fi
 fi
 
@@ -210,26 +302,64 @@ if should_cleanup_phase 2; then
             --output text 2>/dev/null || echo "")
 
         if [ -n "$DIST_ID" ] && [ "$DIST_ID" != "None" ]; then
-            print_step "Disabling CloudFront distribution: $DIST_ID"
-
-            # Get current config
-            ETAG=$(aws cloudfront get-distribution-config --id "$DIST_ID" --query 'ETag' --output text)
-            CONFIG=$(aws cloudfront get-distribution-config --id "$DIST_ID" --query 'DistributionConfig' --output json)
-
-            # Disable distribution
-            DISABLED_CONFIG=$(echo "$CONFIG" | jq '.Enabled = false')
-            aws cloudfront update-distribution \
+            # Check if distribution has a pricing plan (WAF WebACL indicates Security Bundle)
+            WEBACL_ID=$(aws cloudfront get-distribution \
                 --id "$DIST_ID" \
-                --if-match "$ETAG" \
-                --distribution-config "$DISABLED_CONFIG" >/dev/null
+                --query "Distribution.DistributionConfig.WebACLId" \
+                --output text 2>/dev/null || echo "")
 
-            print_info "Waiting for distribution to disable (this takes several minutes)..."
-            aws cloudfront wait distribution-deployed --id "$DIST_ID"
+            # Check if distribution is already disabled
+            IS_ENABLED=$(aws cloudfront get-distribution \
+                --id "$DIST_ID" \
+                --query "Distribution.DistributionConfig.Enabled" \
+                --output text 2>/dev/null || echo "true")
 
-            # Delete distribution
+            if [ "$IS_ENABLED" = "true" ]; then
+                print_step "Disabling CloudFront distribution: $DIST_ID"
+
+                # Get current config
+                ETAG=$(aws cloudfront get-distribution-config --id "$DIST_ID" --query 'ETag' --output text)
+                CONFIG=$(aws cloudfront get-distribution-config --id "$DIST_ID" --query 'DistributionConfig' --output json)
+
+                # Disable distribution
+                DISABLED_CONFIG=$(echo "$CONFIG" | jq '.Enabled = false')
+                aws cloudfront update-distribution \
+                    --id "$DIST_ID" \
+                    --if-match "$ETAG" \
+                    --distribution-config "$DISABLED_CONFIG" >/dev/null
+
+                print_info "Waiting for distribution to disable (this takes several minutes)..."
+                aws cloudfront wait distribution-deployed --id "$DIST_ID"
+                print_success "Distribution disabled"
+            else
+                print_info "Distribution already disabled"
+            fi
+
+            # Attempt to delete distribution
+            print_step "Attempting to delete CloudFront distribution: $DIST_ID"
             NEW_ETAG=$(aws cloudfront get-distribution-config --id "$DIST_ID" --query 'ETag' --output text)
-            aws cloudfront delete-distribution --id "$DIST_ID" --if-match "$NEW_ETAG"
-            print_success "CloudFront distribution deleted"
+
+            DELETE_OUTPUT=$(aws cloudfront delete-distribution --id "$DIST_ID" --if-match "$NEW_ETAG" 2>&1) && {
+                print_success "CloudFront distribution deleted"
+            } || {
+                if echo "$DELETE_OUTPUT" | grep -q "pricing plan"; then
+                    print_info "Distribution is subscribed to a pricing plan (CloudFront Security Bundle)"
+                    print_info "The distribution has been disabled but cannot be deleted until:"
+                    print_info "  1. Cancel the pricing plan in AWS Console"
+                    print_info "  2. Wait until end of billing cycle"
+                    print_info ""
+                    print_info "CloudFront Console: https://console.aws.amazon.com/cloudfront/v4/home#/savings-bundle"
+                    print_info ""
+                    print_info "Distribution ID: $DIST_ID"
+                    if [ -n "$WEBACL_ID" ] && [ "$WEBACL_ID" != "None" ] && [ "$WEBACL_ID" != "" ]; then
+                        print_info "WAF WebACL attached (may incur charges): $WEBACL_ID"
+                    fi
+                    print_info ""
+                    print_info "Continuing with remaining cleanup..."
+                else
+                    print_error "Failed to delete distribution: $DELETE_OUTPUT"
+                fi
+            }
         else
             print_info "No CloudFront distribution found to delete"
         fi
@@ -246,7 +376,7 @@ if should_cleanup_phase 2; then
         fi
 
         # Empty and delete S3 bucket
-        if aws s3api head-bucket --bucket "$S3_BUCKET_NAME" 2>/dev/null; then
+        if aws s3api head-bucket --bucket "$S3_BUCKET_NAME" >/dev/null 2>&1; then
             print_step "Emptying S3 bucket: $S3_BUCKET_NAME"
             aws s3 rm "s3://$S3_BUCKET_NAME" --recursive 2>/dev/null || true
 
@@ -274,6 +404,10 @@ if should_cleanup_phase 2; then
         else
             print_info "No S3 bucket found to delete"
         fi
+
+        # Remove cloudfront config files
+        rm -f "$SCRIPT_DIR/generated/cloudfront-config.json" 2>/dev/null || true
+        rm -f "$SCRIPT_DIR/generated/cloudfront-bucket-policy.json" 2>/dev/null || true
     fi
 fi
 
@@ -326,6 +460,9 @@ if should_cleanup_phase 1; then
                 print_success "Policy deleted"
             fi
         done
+
+        # Remove iam config file
+        rm -f "$SCRIPT_DIR/generated/iam-config.json" 2>/dev/null || true
     fi
 fi
 
@@ -333,8 +470,8 @@ fi
 # Cleanup Config Files
 #-------------------------------------------------------------------------------
 if [ "$DRY_RUN" != true ]; then
-    print_step "Removing configuration files..."
-    rm -f "$SCRIPT_DIR"/*.json "$SCRIPT_DIR"/cloudfront-bucket-policy.json 2>/dev/null || true
+    print_step "Removing remaining configuration files..."
+    rm -f "$SCRIPT_DIR/generated/dynamodb-config.json" 2>/dev/null || true
     print_success "Configuration files removed"
 fi
 

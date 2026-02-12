@@ -129,7 +129,7 @@ echo "  List Entries:         Query PK=USER#<id>, SK begins_with ENTRY#<trackerI
 echo "  Get Summary:          GetItem PK=USER#<id>, SK=SUMMARY#<trackerId>"
 
 # Save DynamoDB config
-DYNAMODB_CONFIG_FILE="$SCRIPT_DIR/../dynamodb-config.json"
+DYNAMODB_CONFIG_FILE="$SCRIPT_DIR/../generated/dynamodb-config.json"
 cat > "$DYNAMODB_CONFIG_FILE" << EOF
 {
     "tableName": "$DYNAMODB_TABLE_NAME",

@@ -127,7 +127,7 @@ echo ""
 echo "Next: Run 02-setup-cognito-app-client.sh to create the App Client"
 
 # Save User Pool config
-COGNITO_CONFIG_FILE="$SCRIPT_DIR/../cognito-config.json"
+COGNITO_CONFIG_FILE="$SCRIPT_DIR/../generated/cognito-config.json"
 cat > "$COGNITO_CONFIG_FILE" << EOF
 {
     "userPoolId": "$USER_POOL_ID",

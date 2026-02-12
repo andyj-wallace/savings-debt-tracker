@@ -186,7 +186,7 @@ echo ""
 echo "This role will be used by Lambda functions in Phase 5."
 
 # Save role ARN to config file for other scripts
-ROLE_CONFIG_FILE="$SCRIPT_DIR/../iam-config.json"
+ROLE_CONFIG_FILE="$SCRIPT_DIR/../generated/iam-config.json"
 cat > "$ROLE_CONFIG_FILE" << EOF
 {
     "executionRoleArn": "$ROLE_ARN",

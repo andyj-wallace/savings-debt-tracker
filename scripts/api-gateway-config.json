@@ -1,8 +1,0 @@
-{
-  "apiId": "mwqe7n7xm0",
-  "apiEndpoint": "https://mwqe7n7xm0.execute-api.us-east-2.amazonaws.com/prod",
-  "authorizerId": "tdkra8",
-  "logGroupName": "/aws/apigateway/debt-tracker-api",
-  "region": "us-east-2",
-  "stageName": "prod"
-}

@@ -114,7 +114,7 @@ echo ""
 echo "Next: Run 02-setup-cloudfront.sh to create CloudFront distribution"
 
 # Save bucket info
-BUCKET_CONFIG_FILE="$SCRIPT_DIR/../s3-config.json"
+BUCKET_CONFIG_FILE="$SCRIPT_DIR/../generated/s3-config.json"
 cat > "$BUCKET_CONFIG_FILE" << EOF
 {
     "bucketName": "$S3_BUCKET_NAME",

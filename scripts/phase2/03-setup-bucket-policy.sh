@@ -25,7 +25,7 @@ print_header "Phase 2: Setup S3 Bucket Policy for CloudFront"
 #-------------------------------------------------------------------------------
 print_step "Loading CloudFront configuration..."
 
-CLOUDFRONT_CONFIG_FILE="$SCRIPT_DIR/../cloudfront-config.json"
+CLOUDFRONT_CONFIG_FILE="$SCRIPT_DIR/../generated/cloudfront-config.json"
 
 if [ ! -f "$CLOUDFRONT_CONFIG_FILE" ]; then
     print_error "CloudFront configuration not found. Run 02-setup-cloudfront.sh first."

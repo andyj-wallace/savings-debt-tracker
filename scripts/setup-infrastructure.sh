@@ -9,6 +9,7 @@
 #   Phase 1: AWS Account & IAM Baseline (verification + IAM roles)
 #   Phase 2: Frontend Hosting (S3 + CloudFront)
 #   Phase 3: Cognito Authentication
+#   Phase 4: API Gateway with JWT Authorization
 #   Phase 5: Lambda Service Layer
 #   Phase 6: DynamoDB Data Model
 #
@@ -30,7 +31,7 @@ source "$SCRIPT_DIR/config.sh"
 #-------------------------------------------------------------------------------
 # Parse Arguments
 #-------------------------------------------------------------------------------
-RUN_PHASES="1,2,3,5,6"
+RUN_PHASES="1,2,3,4,6,5"
 SKIP_PHASES=""
 DRY_RUN=false
 
@@ -61,6 +62,7 @@ while [[ $# -gt 0 ]]; do
             echo "  1: AWS Account & IAM Baseline"
             echo "  2: Frontend Hosting (S3 + CloudFront)"
             echo "  3: Cognito Authentication"
+            echo "  4: API Gateway with JWT Authorization"
             echo "  5: Lambda Service Layer"
             echo "  6: DynamoDB Data Model"
             exit 0
@@ -194,6 +196,46 @@ else
 fi
 
 #-------------------------------------------------------------------------------
+# Phase 4: API Gateway
+#-------------------------------------------------------------------------------
+if should_run_phase 4; then
+    print_header "PHASE 4: API Gateway"
+
+    if [ "$DRY_RUN" = true ]; then
+        echo "Would run:"
+        echo "  - phase4/01-setup-api-gateway.sh"
+    else
+        echo "Running Phase 4 scripts..."
+        echo ""
+
+        # Setup API Gateway with JWT authorizer
+        bash "$SCRIPT_DIR/phase4/01-setup-api-gateway.sh"
+    fi
+else
+    echo "Skipping Phase 4: API Gateway"
+fi
+
+#-------------------------------------------------------------------------------
+# Phase 6: DynamoDB Data Model
+#-------------------------------------------------------------------------------
+if should_run_phase 6; then
+    print_header "PHASE 6: DynamoDB Data Model"
+
+    if [ "$DRY_RUN" = true ]; then
+        echo "Would run:"
+        echo "  - phase6/01-setup-dynamodb.sh"
+    else
+        echo "Running Phase 6 scripts..."
+        echo ""
+
+        # Setup DynamoDB table
+        bash "$SCRIPT_DIR/phase6/01-setup-dynamodb.sh"
+    fi
+else
+    echo "Skipping Phase 6: DynamoDB Data Model"
+fi
+
+#-------------------------------------------------------------------------------
 # Phase 5: Lambda Service Layer
 #-------------------------------------------------------------------------------
 if should_run_phase 5; then
@@ -219,26 +261,6 @@ if should_run_phase 5; then
     fi
 else
     echo "Skipping Phase 5: Lambda Service Layer"
-fi
-
-#-------------------------------------------------------------------------------
-# Phase 6: DynamoDB Data Model
-#-------------------------------------------------------------------------------
-if should_run_phase 6; then
-    print_header "PHASE 6: DynamoDB Data Model"
-
-    if [ "$DRY_RUN" = true ]; then
-        echo "Would run:"
-        echo "  - phase6/01-setup-dynamodb.sh"
-    else
-        echo "Running Phase 6 scripts..."
-        echo ""
-
-        # Setup DynamoDB table
-        bash "$SCRIPT_DIR/phase6/01-setup-dynamodb.sh"
-    fi
-else
-    echo "Skipping Phase 6: DynamoDB Data Model"
 fi
 
 #-------------------------------------------------------------------------------
@@ -269,8 +291,8 @@ else
     echo "API Endpoint: $API_GATEWAY_ENDPOINT"
 
     # Show Cognito config if Phase 3 was run
-    if [ -f "$SCRIPT_DIR/cognito-config.json" ]; then
-        COGNITO_HOSTED=$(jq -r '.hostedDomain // empty' "$SCRIPT_DIR/cognito-config.json" 2>/dev/null)
+    if [ -f "$SCRIPT_DIR/generated/cognito-config.json" ]; then
+        COGNITO_HOSTED=$(jq -r '.hostedDomain // empty' "$SCRIPT_DIR/generated/cognito-config.json" 2>/dev/null)
         if [ -n "$COGNITO_HOSTED" ]; then
             echo "Cognito Hosted UI: https://$COGNITO_HOSTED"
         fi

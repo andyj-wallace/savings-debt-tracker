@@ -33,7 +33,7 @@ if [ -z "$API_GATEWAY_ID" ]; then
 fi
 
 # Check for Lambda config
-LAMBDA_CONFIG_FILE="$SCRIPT_DIR/../lambda-config.json"
+LAMBDA_CONFIG_FILE="$SCRIPT_DIR/../generated/lambda-config.json"
 if [ ! -f "$LAMBDA_CONFIG_FILE" ]; then
     print_error "Lambda config not found: $LAMBDA_CONFIG_FILE"
     print_info "Run phase5/02-deploy-lambdas.sh first"
@@ -147,7 +147,7 @@ create_integration() {
 
     # Grant API Gateway permission to invoke Lambda
     # Remove existing permission first (ignore errors if it doesn't exist)
-    local STATEMENT_ID="${FUNCTION_NAME}-apigw-$(echo "$ROUTE_KEY" | tr ' /' '--')"
+    local STATEMENT_ID="${FUNCTION_NAME}-apigw-$(echo "$ROUTE_KEY" | tr ' /' '--' | tr -d '{}')"
 
     aws lambda remove-permission \
         --function-name "$FUNCTION_NAME" \
