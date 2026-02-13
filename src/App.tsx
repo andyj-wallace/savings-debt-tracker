@@ -1,8 +1,13 @@
+import { useState } from 'react';
 import DebtSavingsThermometer from './components/DebtSavingsThermometer';
+import TrackerList from './components/TrackerList';
+import CreateTrackerForm from './components/CreateTrackerForm';
+import TrackerDetail from './components/TrackerDetail';
 import { TrackerProvider } from './context/TrackerProvider';
 import ErrorBoundary from './components/ErrorBoundary';
 import AuthHeader from './components/AuthHeader';
 import ProtectedRoute from './components/ProtectedRoute';
+import { useDataSource } from './hooks/useDataSource';
 
 /**
  * Top-level error handler for logging critical errors
@@ -18,7 +23,23 @@ const handleCriticalError = (error: Error, errorInfo: React.ErrorInfo) => {
   }
 };
 
+type ApiView = 'list' | 'create' | 'detail';
+
 function App() {
+  const dataSource = useDataSource();
+  const [view, setView] = useState<ApiView>('list');
+  const [selectedTrackerId, setSelectedTrackerId] = useState<string | null>(null);
+
+  const navigateToDetail = (trackerId: string) => {
+    setSelectedTrackerId(trackerId);
+    setView('detail');
+  };
+
+  const navigateToList = () => {
+    setSelectedTrackerId(null);
+    setView('list');
+  };
+
   return (
     <ErrorBoundary
       onError={handleCriticalError}
@@ -26,9 +47,32 @@ function App() {
     >
       <ProtectedRoute>
         <AuthHeader />
-        <TrackerProvider>
-          <DebtSavingsThermometer />
-        </TrackerProvider>
+        {dataSource === 'api' ? (
+          <>
+            {view === 'list' && (
+              <TrackerList
+                onSelectTracker={navigateToDetail}
+                onCreateTracker={() => setView('create')}
+              />
+            )}
+            {view === 'create' && (
+              <CreateTrackerForm
+                onCreated={navigateToDetail}
+                onCancel={navigateToList}
+              />
+            )}
+            {view === 'detail' && selectedTrackerId && (
+              <TrackerDetail
+                trackerId={selectedTrackerId}
+                onBack={navigateToList}
+              />
+            )}
+          </>
+        ) : (
+          <TrackerProvider>
+            <DebtSavingsThermometer />
+          </TrackerProvider>
+        )}
       </ProtectedRoute>
     </ErrorBoundary>
   );

@@ -167,6 +167,9 @@ const defaultConfig = {
     calendarIntegration: false, // Calendar reminders
     notificationSystem: false, // Push notifications
 
+    // Backend integration
+    useApiBackend: process.env.REACT_APP_USE_API_BACKEND === 'true',
+
     // Development features
     debugMode: process.env.NODE_ENV === 'development',
     errorReporting: process.env.NODE_ENV === 'production',

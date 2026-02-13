@@ -157,6 +157,39 @@ export const LABELS = {
     BALANCE: 'Balance',
     DELETE_CONFIRMATION: 'Are you sure you want to delete this transaction?',
     RESET_CONFIRMATION: 'Are you sure you want to reset all data?'
+  },
+  TRACKER_LIST: {
+    TITLE: 'My Trackers',
+    EMPTY: 'No trackers yet. Create one to get started!',
+    ERROR: 'Failed to load trackers.',
+    RETRY: 'Try Again',
+    SAVINGS: 'Savings',
+    DEBT: 'Debt',
+    CREATE: 'Create Tracker'
+  },
+  TRACKER_FORM: {
+    CREATE_TITLE: 'Create New Tracker',
+    NAME_LABEL: 'Tracker Name',
+    NAME_PLACEHOLDER: 'e.g. Emergency Fund, Credit Card',
+    GOAL_LABEL: 'Goal Amount',
+    INTEREST_LABEL: 'Annual Interest Rate (%)',
+    CREATE_BUTTON: 'Create Tracker',
+    CANCEL: 'Cancel',
+    CREATING: 'Creating...'
+  },
+  TRACKER_DETAIL: {
+    BACK: 'Back to Trackers',
+    ADD_ENTRY: 'Add Entry',
+    ENTRY_AMOUNT: 'Amount',
+    ENTRY_NOTE: 'Note (optional)',
+    SUBMIT_ENTRY: 'Submit',
+    SUBMITTING: 'Submitting...',
+    ENTRY_HISTORY: 'Entry History',
+    LOAD_MORE: 'Load More',
+    NO_ENTRIES: 'No entries yet.',
+    DELETE_TRACKER: 'Delete Tracker',
+    DELETE_CONFIRM: 'Are you sure you want to delete this tracker? This cannot be undone.',
+    DELETING: 'Deleting...'
   }
 };
 
