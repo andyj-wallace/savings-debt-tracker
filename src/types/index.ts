@@ -596,3 +596,80 @@ export type RequiredBy<T, K extends keyof T> = T & Required<Pick<T, K>>;
  * Utility type for creating update objects
  */
 export type UpdatePayload<T> = Partial<T> & { id?: string };
+
+/**
+ * API response types
+ * Values align with Lambda response shapes. All monetary values are in cents.
+ */
+
+export interface ApiTracker {
+  trackerId: string;
+  userId: string;
+  name: string;
+  mode: Mode;
+  goalAmount: number;
+  currentAmount: number;
+  interestRate?: number;
+  lastInterestDate?: string;
+  percentage: number;
+  remaining: number;
+  createdAt: string;
+  updatedAt: string;
+  summary?: ApiSummary;
+}
+
+export interface ApiTrackerDetail extends ApiTracker {
+  recentEntries: ApiEntry[];
+}
+
+export interface ApiEntry {
+  entryId: string;
+  trackerId: string;
+  userId: string;
+  amount: number;
+  type: 'transaction' | 'interest';
+  note?: string;
+  runningTotal: number;
+  days?: number;
+  createdAt: string;
+}
+
+export interface ApiSummary {
+  trackerId: string;
+  userId: string;
+  transactionCount: number;
+  totalDeposits: number;
+  totalWithdrawals: number;
+  totalInterest: number;
+  averageTransaction: number;
+  largestTransaction: number;
+  lastTransactionDate?: string;
+  updatedAt: string;
+}
+
+export interface PaginatedResponse<T> {
+  items: T[];
+  count: number;
+  nextToken?: string;
+}
+
+export interface CreateTrackerRequest {
+  name: string;
+  mode: Mode;
+  goalAmount: number;
+  currentAmount?: number;
+  interestRate?: number;
+}
+
+export interface UpdateTrackerRequest {
+  name?: string;
+  goalAmount?: number;
+  interestRate?: number;
+}
+
+export interface CreateEntryRequest {
+  amount: number;
+  type: 'transaction' | 'interest';
+  note?: string;
+  days?: number;
+}

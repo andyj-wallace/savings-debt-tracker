@@ -150,6 +150,15 @@ Builds the app, syncs to S3, and invalidates CloudFront cache.
 
 **Prerequisites:** AWS CLI configured, infrastructure provisioned via `setup-infrastructure.sh`
 
+### API Client (Frontend → Backend)
+
+`src/services/apiClient.ts` provides a singleton `apiClient` that centralizes all backend communication:
+- Base URL configured via `REACT_APP_API_URL` env var
+- JWT access token auto-attached from Cognito/OIDC auth context
+- All methods return `ServiceResult<T>` with consistent error handling
+- Endpoints: `listTrackers`, `createTracker`, `getTracker`, `updateTracker`, `deleteTracker`, `createEntry`, `listEntries`
+- API types in `src/types/index.ts` (amounts in cents, matching Lambda response shapes)
+
 ### Lambda Types
 
 TypeScript type definitions for DynamoDB entities are in `lambda/src/types/`:

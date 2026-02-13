@@ -13,6 +13,11 @@
  * This serves as the base configuration that can be overridden per environment
  */
 const defaultConfig = {
+  // API configuration
+  api: {
+    baseUrl: process.env.REACT_APP_API_URL || '',
+  },
+
   // Application metadata
   app: {
     name: 'Financial Progress Tracker',
