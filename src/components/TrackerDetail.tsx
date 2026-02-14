@@ -17,6 +17,7 @@ import { LABELS, MODES, CSS_CLASSES } from '../constants';
 import { cardPresets } from '../styles/cardStyles';
 import { inputPresets, inputLabel } from '../styles/inputStyles';
 import { buttonPresets } from '../styles/buttonStyles';
+import { useOnlineStatus } from '../hooks/useOnlineStatus';
 import type { ApiTrackerDetail as ApiTrackerDetailType, ApiEntry } from '../types';
 
 interface TrackerDetailProps {
@@ -25,6 +26,8 @@ interface TrackerDetailProps {
 }
 
 export default function TrackerDetail({ trackerId, onBack }: TrackerDetailProps) {
+  const isOnline = useOnlineStatus();
+
   // Tracker data state
   const [tracker, setTracker] = useState<ApiTrackerDetailType | null>(null);
   const [entries, setEntries] = useState<ApiEntry[]>([]);
@@ -288,8 +291,9 @@ export default function TrackerDetail({ trackerId, onBack }: TrackerDetailProps)
               </div>
               <button
                 type="submit"
-                disabled={entrySubmitting}
-                className={buttonPresets.formSubmit(entrySubmitting)}
+                disabled={entrySubmitting || !isOnline}
+                title={!isOnline ? LABELS.OFFLINE.ACTION_DISABLED : undefined}
+                className={buttonPresets.formSubmit(entrySubmitting || !isOnline)}
               >
                 {entrySubmitting ? LABELS.TRACKER_DETAIL.SUBMITTING : LABELS.TRACKER_DETAIL.SUBMIT_ENTRY}
               </button>
@@ -350,8 +354,9 @@ export default function TrackerDetail({ trackerId, onBack }: TrackerDetailProps)
                 <div className="text-center pt-2">
                   <button
                     onClick={loadMoreEntries}
-                    disabled={loadingMore}
-                    className={buttonPresets.navButton(loadingMore)}
+                    disabled={loadingMore || !isOnline}
+                    title={!isOnline ? LABELS.OFFLINE.ACTION_DISABLED : undefined}
+                    className={buttonPresets.navButton(loadingMore || !isOnline)}
                   >
                     {loadingMore ? '...' : LABELS.TRACKER_DETAIL.LOAD_MORE}
                   </button>
@@ -368,8 +373,9 @@ export default function TrackerDetail({ trackerId, onBack }: TrackerDetailProps)
           )}
           <button
             onClick={handleDelete}
-            disabled={deleting}
-            className={buttonPresets.actionDanger(deleting)}
+            disabled={deleting || !isOnline}
+            title={!isOnline ? LABELS.OFFLINE.ACTION_DISABLED : undefined}
+            className={buttonPresets.actionDanger(deleting || !isOnline)}
           >
             {deleting ? LABELS.TRACKER_DETAIL.DELETING : LABELS.TRACKER_DETAIL.DELETE_TRACKER}
           </button>

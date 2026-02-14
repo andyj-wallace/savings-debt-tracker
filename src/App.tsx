@@ -6,6 +6,7 @@ import TrackerDetail from './components/TrackerDetail';
 import { TrackerProvider } from './context/TrackerProvider';
 import ErrorBoundary from './components/ErrorBoundary';
 import AuthHeader from './components/AuthHeader';
+import OfflineBanner from './components/OfflineBanner';
 import ProtectedRoute from './components/ProtectedRoute';
 import { useDataSource } from './hooks/useDataSource';
 
@@ -47,6 +48,7 @@ function App() {
     >
       <ProtectedRoute>
         <AuthHeader />
+        {dataSource === 'api' && <OfflineBanner />}
         {dataSource === 'api' ? (
           <>
             {view === 'list' && (

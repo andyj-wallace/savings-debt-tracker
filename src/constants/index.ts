@@ -177,6 +177,10 @@ export const LABELS = {
     CANCEL: 'Cancel',
     CREATING: 'Creating...'
   },
+  OFFLINE: {
+    BANNER: 'You are offline. Some features may be unavailable.',
+    ACTION_DISABLED: 'This action requires an internet connection.'
+  },
   TRACKER_DETAIL: {
     BACK: 'Back to Trackers',
     ADD_ENTRY: 'Add Entry',

@@ -15,6 +15,7 @@ import { apiClient } from '../services/apiClient';
 import { formatCurrency } from '../utils/formatCurrency';
 import { LABELS, CSS_CLASSES, MODES } from '../constants';
 import { buttonPresets } from '../styles/buttonStyles';
+import { useOnlineStatus } from '../hooks/useOnlineStatus';
 import type { ApiTracker } from '../types';
 
 interface TrackerListProps {
@@ -23,6 +24,7 @@ interface TrackerListProps {
 }
 
 export default function TrackerList({ onSelectTracker, onCreateTracker }: TrackerListProps) {
+  const isOnline = useOnlineStatus();
   const [trackers, setTrackers] = useState<ApiTracker[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -36,7 +38,7 @@ export default function TrackerList({ onSelectTracker, onCreateTracker }: Tracke
     if (result.success && result.data) {
       setTrackers(result.data.items);
     } else {
-      setError(result.error || LABELS.TRACKER_LIST.ERROR);
+      setError(!navigator.onLine ? LABELS.OFFLINE.BANNER : (result.error || LABELS.TRACKER_LIST.ERROR));
     }
 
     setLoading(false);
@@ -87,7 +89,9 @@ export default function TrackerList({ onSelectTracker, onCreateTracker }: Tracke
           {onCreateTracker && (
             <button
               onClick={onCreateTracker}
-              className={`flex items-center gap-2 ${buttonPresets.formSubmit()}`}
+              disabled={!isOnline}
+              title={!isOnline ? LABELS.OFFLINE.ACTION_DISABLED : undefined}
+              className={`flex items-center gap-2 ${buttonPresets.formSubmit(!isOnline)}`}
             >
               <Plus size={18} /> {LABELS.TRACKER_LIST.CREATE}
             </button>

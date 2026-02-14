@@ -16,6 +16,7 @@ import { LABELS, MODES, CSS_CLASSES } from '../constants';
 import { cardPresets } from '../styles/cardStyles';
 import { inputPresets, inputLabel } from '../styles/inputStyles';
 import { buttonPresets } from '../styles/buttonStyles';
+import { useOnlineStatus } from '../hooks/useOnlineStatus';
 import type { Mode } from '../types';
 
 interface CreateTrackerFormProps {
@@ -24,6 +25,7 @@ interface CreateTrackerFormProps {
 }
 
 export default function CreateTrackerForm({ onCreated, onCancel }: CreateTrackerFormProps) {
+  const isOnline = useOnlineStatus();
   const [name, setName] = useState('');
   const [mode, setMode] = useState<Mode>('savings');
   const [goalAmount, setGoalAmount] = useState('');
@@ -182,8 +184,9 @@ export default function CreateTrackerForm({ onCreated, onCancel }: CreateTracker
             </button>
             <button
               type="submit"
-              disabled={submitting}
-              className={`flex-1 ${buttonPresets.formSubmit(submitting)}`}
+              disabled={submitting || !isOnline}
+              title={!isOnline ? LABELS.OFFLINE.ACTION_DISABLED : undefined}
+              className={`flex-1 ${buttonPresets.formSubmit(submitting || !isOnline)}`}
             >
               {submitting ? LABELS.TRACKER_FORM.CREATING : LABELS.TRACKER_FORM.CREATE_BUTTON}
             </button>
