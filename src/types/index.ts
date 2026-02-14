@@ -665,6 +665,7 @@ export interface UpdateTrackerRequest {
   name?: string;
   goalAmount?: number;
   interestRate?: number;
+  lastInterestDate?: string;
 }
 
 export interface CreateEntryRequest {

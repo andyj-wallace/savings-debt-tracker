@@ -132,7 +132,9 @@ All AWS infrastructure is provisioned via bash scripts in `scripts/`. To set up 
 | 2 | S3 bucket + CloudFront distribution (HTTPS, SPA routing) |
 | 3 | Cognito User Pool + App Client + Hosted UI |
 | 4 | API Gateway HTTP API with JWT authorizer |
+| 5 | Lambda functions (7 API handlers) + CloudWatch log groups |
 | 6 | DynamoDB table (single-table design with PK/SK) |
+| 10 | Monitoring: SNS alerts, CloudWatch dashboard & alarms, SQS DLQ, cost budget, interest scheduler |
 
 Configuration is split between **input** (project name, region in `config.sh`) and **generated** (AWS-created IDs stored in JSON files). See [docs/infrastructure-scripts.md](docs/infrastructure-scripts.md) for details.
 
@@ -159,12 +161,64 @@ Builds the app, syncs to S3, and invalidates CloudFront cache.
 - Endpoints: `listTrackers`, `createTracker`, `getTracker`, `updateTracker`, `deleteTracker`, `createEntry`, `listEntries`
 - API types in `src/types/index.ts` (amounts in cents, matching Lambda response shapes)
 
-### Lambda Types
+### Lambda Functions
+
+8 Lambda functions handle API requests and scheduled jobs:
+
+| Function | Trigger | Handler |
+|----------|---------|---------|
+| `debt-tracker-create-tracker` | POST /trackers | `handlers/createTracker.handler` |
+| `debt-tracker-list-trackers` | GET /trackers | `handlers/listTrackers.handler` |
+| `debt-tracker-get-tracker` | GET /trackers/{id} | `handlers/getTracker.handler` |
+| `debt-tracker-update-tracker` | PUT /trackers/{id} | `handlers/updateTracker.handler` |
+| `debt-tracker-delete-tracker` | DELETE /trackers/{id} | `handlers/deleteTracker.handler` |
+| `debt-tracker-create-entry` | POST /trackers/{id}/entries | `handlers/createEntry.handler` |
+| `debt-tracker-list-entries` | GET /trackers/{id}/entries | `handlers/listEntries.handler` |
+| `debt-tracker-calculate-interest` | EventBridge (daily 2 AM UTC) | `handlers/calculateInterest.handler` |
 
 TypeScript type definitions for DynamoDB entities are in `lambda/src/types/`:
 - `dynamodb.ts` - Entity interfaces (TrackerItem, EntryItem, SummaryItem)
 - `keys.ts` - Key generation utilities for single-table design
 - Schema documentation in `lambda/SCHEMA.md`
+
+### Monitoring (Phase 10)
+
+Setup monitoring infrastructure:
+
+```bash
+ALERT_EMAIL=you@example.com ./scripts/phase10/01-setup-monitoring.sh  # SNS, alarms, dashboard, DLQ, budget
+./scripts/phase10/02-setup-interest-scheduler.sh                       # Interest calculation Lambda + EventBridge
+```
+
+Resources created:
+- **CloudWatch Dashboard** (`debt-tracker-dashboard`) — Lambda errors, duration, API latency, DynamoDB capacity
+- **CloudWatch Alarms** — Per-function error alerts, API p99 latency, DynamoDB throttling, DLQ depth
+- **SNS Topic** (`debt-tracker-alerts`) — Email notifications for all alarms
+- **SQS DLQ** (`debt-tracker-dlq`) — Captures failed async Lambda invocations
+- **AWS Budget** (`debt-tracker-monthly-budget`) — $10/month alerts at 50%, 80%, 100%
+
+### Environment Variables
+
+| Variable | Used By | Description |
+|----------|---------|-------------|
+| `REACT_APP_API_URL` | Frontend | API Gateway endpoint URL |
+| `REACT_APP_USE_API_BACKEND` | Frontend | `true` to use API backend, otherwise localStorage |
+| `REACT_APP_COGNITO_AUTHORITY` | Frontend | Cognito issuer URL |
+| `REACT_APP_COGNITO_CLIENT_ID` | Frontend | Cognito App Client ID |
+| `REACT_APP_COGNITO_REDIRECT_URI` | Frontend | OAuth callback URL |
+| `DYNAMODB_TABLE_NAME` | Lambda | DynamoDB table name (set by deploy script) |
+
+### Local Development
+
+```bash
+npm install          # Install frontend dependencies
+npm start            # Start React dev server on localhost:3000
+
+cd lambda
+npm install          # Install Lambda dependencies
+npm test             # Run Lambda unit tests (39 tests)
+npm run build        # Compile TypeScript
+```
 
 Summary
 Debt Tracker is intentionally designed as a systems-focused serverless application, emphasizing tradeoffs, failure handling, and cost-aware architecture. The project demonstrates how time-based financial logic can be modeled using event-driven patterns on AWS, rather than as a simple CRUD application.
@@ -174,9 +228,9 @@ Appendix: "What I'd Do Next With More Scale"
 If usage or funding increased, I'd focus on resilience, observability, and cost control:
 * Migrate bash IaC scripts to Terraform/CDK for state management
 * Add CI/CD (GitHub Actions → AWS)
-* Introduce CloudWatch dashboards + alarms
 * Add API caching (API Gateway / CloudFront)
 * Evaluate Aurora Serverless v2 if relational access becomes necessary
 * Implement rate limiting + WAF
 * Move secrets to SSM Parameter Store
+* Add custom domain with Route 53 + ACM certificate
 Key point: nothing above requires re-writing the core system—just layering.

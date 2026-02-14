@@ -16,3 +16,6 @@ export { handler as deleteTrackerHandler } from './deleteTracker';
 // Entry handlers
 export { handler as createEntryHandler } from './createEntry';
 export { handler as listEntriesHandler } from './listEntries';
+
+// Scheduled handlers
+export { handler as calculateInterestHandler } from './calculateInterest';

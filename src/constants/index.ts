@@ -194,6 +194,18 @@ export const LABELS = {
     DELETE_TRACKER: 'Delete Tracker',
     DELETE_CONFIRM: 'Are you sure you want to delete this tracker? This cannot be undone.',
     DELETING: 'Deleting...'
+  },
+  MIGRATION: {
+    PROMPT_TITLE: 'Local data found',
+    PROMPT_DESCRIPTION: 'You have tracker data saved locally. Migrate it to the cloud so it syncs across devices.',
+    MIGRATE_BUTTON: 'Migrate',
+    DISMISS: 'Dismiss',
+    IN_PROGRESS: 'Migrating your data...',
+    SUCCESS_TITLE: 'Migration complete!',
+    CLEAR_LOCAL: 'Clear local data',
+    KEEP_LOCAL: 'Keep local copy',
+    ERROR_TITLE: 'Migration failed',
+    RETRY: 'Retry'
   }
 };
 

@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import DebtSavingsThermometer from './components/DebtSavingsThermometer';
 import TrackerList from './components/TrackerList';
 import CreateTrackerForm from './components/CreateTrackerForm';
 import TrackerDetail from './components/TrackerDetail';
+import MigrationBanner from './components/MigrationBanner';
 import { TrackerProvider } from './context/TrackerProvider';
 import ErrorBoundary from './components/ErrorBoundary';
 import AuthHeader from './components/AuthHeader';
@@ -30,6 +31,11 @@ function App() {
   const dataSource = useDataSource();
   const [view, setView] = useState<ApiView>('list');
   const [selectedTrackerId, setSelectedTrackerId] = useState<string | null>(null);
+  const [listKey, setListKey] = useState(0);
+
+  const handleMigrationComplete = useCallback(() => {
+    setListKey((k) => k + 1);
+  }, []);
 
   const navigateToDetail = (trackerId: string) => {
     setSelectedTrackerId(trackerId);
@@ -52,10 +58,14 @@ function App() {
         {dataSource === 'api' ? (
           <>
             {view === 'list' && (
-              <TrackerList
-                onSelectTracker={navigateToDetail}
-                onCreateTracker={() => setView('create')}
-              />
+              <>
+                <MigrationBanner onMigrationComplete={handleMigrationComplete} />
+                <TrackerList
+                  key={listKey}
+                  onSelectTracker={navigateToDetail}
+                  onCreateTracker={() => setView('create')}
+                />
+              </>
             )}
             {view === 'create' && (
               <CreateTrackerForm
