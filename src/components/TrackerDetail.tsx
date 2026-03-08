@@ -14,7 +14,6 @@ import { ArrowLeft, TrendingUp, TrendingDown, Percent } from 'lucide-react';
 import { apiClient } from '../services/apiClient';
 import { formatCurrency } from '../utils/formatCurrency';
 import { LABELS, MODES, CSS_CLASSES } from '../constants';
-import { cardPresets } from '../styles/cardStyles';
 import { inputPresets, inputLabel } from '../styles/inputStyles';
 import { buttonPresets } from '../styles/buttonStyles';
 import { useOnlineStatus } from '../hooks/useOnlineStatus';

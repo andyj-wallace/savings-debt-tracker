@@ -173,7 +173,7 @@ All queries scoped to USER# partition → automatic tenant isolation.
     │                          │                           │                │── userId
     │                          │                           │                │   from
     │                          │                           │◀── response ───│   claims
-    │◀── JSON response ───────────────────────────────────┤│                │   .sub
+    │◀── JSON response  ───────────────────────────────────┤                │   .sub
     │                          │                           │                │
 ```
 
