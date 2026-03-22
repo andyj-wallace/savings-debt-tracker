@@ -2,25 +2,27 @@
  * Authentication Configuration
  *
  * Cognito OIDC configuration for react-oidc-context.
- * Uses environment variables for sensitive values, with development defaults.
+ * All sensitive values must be set via environment variables.
+ * Copy .env.local.example to .env.local and fill in your values.
  */
 
 const isProduction = process.env.NODE_ENV === 'production';
 
-// Cognito User Pool configuration
-const userPoolId = process.env.REACT_APP_COGNITO_USER_POOL_ID || 'us-east-2_MF6XS4BiK';
-const clientId = process.env.REACT_APP_COGNITO_CLIENT_ID || '4v31bn4r0vudooroapqt3k86si';
-const cognitoDomain = process.env.REACT_APP_COGNITO_DOMAIN || 'us-east-2mf6xs4bik.auth.us-east-2.amazoncognito.com';
-const region = 'us-east-2';
+// Cognito User Pool configuration — required env vars
+const userPoolId = process.env.REACT_APP_COGNITO_USER_POOL_ID as string;
+const clientId = process.env.REACT_APP_COGNITO_CLIENT_ID as string;
+const cognitoDomain = process.env.REACT_APP_COGNITO_DOMAIN as string;
+const region = process.env.REACT_APP_AWS_REGION || 'us-east-2';
+const cloudfrontUrl = process.env.REACT_APP_CLOUDFRONT_URL as string;
 
 // Redirect URIs based on environment
 // Note: Must match callback URLs configured in Cognito App Client
 const redirectUri = isProduction
-  ? 'https://d2w2q49vvlxbof.cloudfront.net/'
+  ? `${cloudfrontUrl}/`
   : 'http://localhost:3000/callback';
 
 const logoutUri = isProduction
-  ? 'https://d2w2q49vvlxbof.cloudfront.net/logout'
+  ? `${cloudfrontUrl}/logout`
   : 'http://localhost:3000/logout';
 
 /**

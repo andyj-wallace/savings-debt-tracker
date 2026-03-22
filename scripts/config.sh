@@ -24,7 +24,10 @@ SCRIPTS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # AWS Account Configuration
 #-------------------------------------------------------------------------------
 export AWS_REGION="us-east-2"
-export AWS_ACCOUNT_ID="345482189946"
+# Derive account ID from AWS CLI if not already set in the environment
+if [ -z "$AWS_ACCOUNT_ID" ]; then
+    export AWS_ACCOUNT_ID=$(aws sts get-caller-identity --query 'Account' --output text 2>/dev/null)
+fi
 
 #-------------------------------------------------------------------------------
 # Project Naming Convention

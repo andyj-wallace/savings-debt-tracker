@@ -6,11 +6,12 @@
 # 2. CloudFront URL serves content successfully
 
 set -e
+source "$(dirname "$0")/config.sh"
 
-BUCKET="debt-tracker-frontend-345482189946"
-REGION="us-east-2"
+BUCKET="${S3_BUCKET_NAME}"
+REGION="${AWS_REGION}"
 S3_URL="https://${BUCKET}.s3.${REGION}.amazonaws.com/index.html"
-CLOUDFRONT_URL="https://d2w2q49vvlxbof.cloudfront.net/"
+CLOUDFRONT_URL="${CLOUDFRONT_URL}"
 
 echo "========================================"
 echo "Story 2.3 Verification: S3 + CloudFront"
