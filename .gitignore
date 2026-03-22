@@ -8,10 +8,6 @@
 # testing
 /coverage
 
-# fo the AI
-/.claude
-/docs
-
 # production
 /build
 
